@@ -1,2 +1,3 @@
-# node-boilingdata
-BoilingData Node client
+# BoilingData JS/TS SDK
+
+This repository contains JS/TS BoilingData SDK.
