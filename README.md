@@ -6,5 +6,9 @@
 This repository contains JS/TS BoilingData SDK.
 
 ```shell
-yarn add boilingdata/node-boilingdata
+yarn add @boilingdata/node-boilingdata
+```
+
+```javascript
+console.log("FIXME please");
 ```

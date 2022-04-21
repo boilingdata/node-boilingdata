@@ -12,7 +12,7 @@ const Logins = `cognito-idp.${region}.amazonaws.com/${UserPoolId}`;
 const poolData = { UserPoolId, ClientId: "6timr8knllr4frovfvq8r2o6oo" };
 const Pool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
 
-export interface BoilingDataCredentials {
+export interface BDCredentials {
   cognitoUsername: string;
   signedWebsocketUrl: string;
 }
@@ -42,7 +42,7 @@ async function refreshCredsWithToken(idToken: string): Promise<CognitoIdentityCr
   return creds;
 }
 
-export async function getBoilingDataCredentials(username: string, password: string): Promise<BoilingDataCredentials> {
+export async function getBoilingDataCredentials(username: string, password: string): Promise<BDCredentials  > {
   const idToken = await getIdToken(username, password);
   const creds = await refreshCredsWithToken(idToken.getJwtToken());
   const params = {
