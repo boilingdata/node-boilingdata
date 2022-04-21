@@ -1,6 +1,5 @@
 import { createLogger } from "bunyan";
 import { BDCredentials, getBoilingDataCredentials } from "common/identity";
-import { resolve } from "path";
 
 export interface IBDCallbacks {
   onData?: () => void;
