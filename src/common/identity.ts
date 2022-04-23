@@ -1,7 +1,6 @@
 import { Signer } from "@aws-amplify/core";
 import { CognitoIdentity, CognitoIdentityCredentials } from "aws-sdk";
-
-import AmazonCognitoIdentity, { CognitoIdToken } from "amazon-cognito-identity-js";
+import { CognitoIdToken, CognitoUserPool, CognitoUser, AuthenticationDetails } from "amazon-cognito-identity-js";
 
 // FIXME: Hard coded
 const region = "eu-west-1";
@@ -10,7 +9,7 @@ const IdentityPoolId = "eu-west-1:bce21571-e3a6-47a4-8032-fd015213405f";
 const webSocketUrl = "wss://m9fhs4t5vh.execute-api.eu-west-1.amazonaws.com/dev";
 const Logins = `cognito-idp.${region}.amazonaws.com/${UserPoolId}`;
 const poolData = { UserPoolId, ClientId: "6timr8knllr4frovfvq8r2o6oo" };
-const Pool = new AmazonCognitoIdentity.CognitoUserPool(poolData);
+const Pool = new CognitoUserPool(poolData);
 
 export interface BDCredentials {
   cognitoUsername: string;
@@ -21,8 +20,8 @@ function getIdToken(Username: string, Password: string): Promise<CognitoIdToken>
   return new Promise((resolve, reject) => {
     const params = { Username, Password };
     const userData = { Username, Pool };
-    const cognitoUser = new AmazonCognitoIdentity.CognitoUser(userData);
-    const authenticationDetails = new AmazonCognitoIdentity.AuthenticationDetails(params);
+    const cognitoUser = new CognitoUser(userData);
+    const authenticationDetails = new AuthenticationDetails(params);
     cognitoUser.authenticateUser(authenticationDetails, {
       onSuccess: result => resolve(result?.getIdToken()),
       onFailure: err => reject(err),
@@ -42,7 +41,7 @@ async function refreshCredsWithToken(idToken: string): Promise<CognitoIdentityCr
   return creds;
 }
 
-export async function getBoilingDataCredentials(username: string, password: string): Promise<BDCredentials  > {
+export async function getBoilingDataCredentials(username: string, password: string): Promise<BDCredentials> {
   const idToken = await getIdToken(username, password);
   const creds = await refreshCredsWithToken(idToken.getJwtToken());
   const params = {
