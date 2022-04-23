@@ -8,7 +8,7 @@ describe("boilingdata", () => {
   it("run simple query", async () => {
     const username = process.env["BD_USERNAME"];
     const password = process.env["BD_PASSWORD"];
-    if (!password || !username) throw new Error("Set USERNAME and PASSWORD envs");
+    if (!password || !username) throw new Error("Set BD_USERNAME and BD_PASSWORD envs");
     const bdInstance = new BoilingData({
       username,
       password,
