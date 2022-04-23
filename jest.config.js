@@ -6,5 +6,5 @@ module.exports = {
   moduleFileExtensions: ["js", "ts"],
   collectCoverage: true,
   collectCoverageFrom: ["src/**/{!(index),}.ts"],
-  coverageReporters: ["json-summary", "text", "lcov"],
+  coverageReporters: [], // ["json-summary", "text", "lcov"],
 };
