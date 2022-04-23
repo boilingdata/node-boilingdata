@@ -1,6 +1,7 @@
-// See API specification:
-// https://www.boilingdata.com/apidoc.html#operation-publish-DataQuery
-export interface IQuery {
+// BoilingData API documentation
+// https://www.boilingdata.com/apidoc.html
+
+export interface IBDDataQuery {
   messageType: string; // "SQL_QUERY"
   requestId: string;
   sql: string;
@@ -19,6 +20,17 @@ export interface IQuery {
     name: string;
     value: string;
   }>;
+}
+
+export interface IBDDataResponse {
+  messageType: "DATA";
+  data: Array<string>;
+  requestId: string;
+  numOfRecords?: number;
+  batchSerial?: number;
+  totalBatches?: number;
+  subBatchSerial?: number;
+  totalSubBatches?: number;
 }
 
 export enum EMessageTypes {

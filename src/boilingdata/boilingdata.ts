@@ -1,20 +1,21 @@
 import { createLogger } from "bunyan";
 import { BDCredentials, getBoilingDataCredentials } from "../common/identity";
-import { EEvent, EMessageTypes, IQuery } from "./boilingdata.api";
+import { EEvent, EMessageTypes, IBDDataQuery, IBDDataResponse } from "./boilingdata.api";
 import { v4 as uuidv4 } from "uuid";
-import { WebSocket } from "ws";
+import { WebSocket, MessageEvent } from "ws";
+import { inspect } from "util";
 
 export interface IBDCallbacks {
-  onData?: (event: IEvent) => void;
-  onInfo?: (event: IEvent) => void;
-  onRequest?: (event: IEvent) => void;
-  onQueryFinished?: (event: IEvent) => void;
-  onError?: (event: IEvent) => void;
-  onLogError?: (event: IEvent) => void;
-  onLogWarn?: (event: IEvent) => void;
-  onLogInfo?: (event: IEvent) => void;
-  onLogDebug?: (event: IEvent) => void;
-  onLambdaEvent?: (event: IEvent) => void;
+  onData?: (data: unknown) => void;
+  onInfo?: (data: unknown) => void;
+  onRequest?: (data: unknown) => void;
+  onQueryFinished?: (data: unknown) => void;
+  onError?: (data: unknown) => void;
+  onLogError?: (data: unknown) => void;
+  onLogWarn?: (data: unknown) => void;
+  onLogInfo?: (data: unknown) => void;
+  onLogDebug?: (data: unknown) => void;
+  onLambdaEvent?: (data: unknown) => void;
   onSocketOpen?: (socketInstance: ISocketInstance) => void;
   onSocketClose?: () => void;
 }
@@ -35,18 +36,18 @@ export interface IBDQuery {
 
 interface ISocketInstance {
   lastActivity: number;
-  queries: Map<string, { recievedBatches: string[] }>;
-  sendQuery: (payload: IQuery) => void;
-  query: (params: any) => Promise<void>;
+  queries: Map<string, { recievedBatches: Set<number> }>;
+  send: (payload: IBDDataQuery) => void;
+  query: (params: IBDQuery) => Promise<void>;
   bumpActivity: () => void;
   socket?: WebSocket;
   queryCallbacks: Map<string, IBDCallbacks>;
 }
 
 interface IEvent {
-  requestId: string;
-  eventType: EEvent;
-  payload: any;
+  requestId?: string;
+  eventType: EEvent | string;
+  payload: unknown;
 }
 
 enum ECallbackNames {
@@ -58,12 +59,17 @@ enum ECallbackNames {
   DATA = "onData",
   INFO = "onInfo",
   LAMBDA_EVENT = "onLambdaEvent",
+  QUERY_FINISHED = "onQueryFinished",
 }
 
-function mapEventToCallbackName(eventType: EEvent): ECallbackNames {
-  const entry = Object.entries(ECallbackNames).find(([key, _value]) => key === eventType);
-  if (!entry) throw new Error(`Mapping event type "${eventType}" to callback name failed!`);
+function mapEventToCallbackName(event: IEvent): ECallbackNames {
+  const entry = Object.entries(ECallbackNames).find(([key, _value]) => key === event.eventType);
+  if (!entry) throw new Error(`Mapping event type "${inspect(event, false, 7)}" to callback name failed!`);
   return entry[1];
+}
+
+function isDataResponse(data: IBDDataResponse | unknown): data is IBDDataResponse {
+  return (data as IBDDataResponse).messageType !== undefined && (data as IBDDataResponse).messageType === "DATA";
 }
 
 export class BoilingData {
@@ -77,15 +83,14 @@ export class BoilingData {
       queries: new Map(), // no queries yet
       queryCallbacks: new Map(), // no queries yet, so no query specific callbacks either
       lastActivity: Date.now(),
-      sendQuery: (payload: IQuery) => {
-        this.logger.info(payload);
+      send: (payload: IBDDataQuery) => {
+        this.socketInstance.socket?.send(JSON.stringify(payload));
         this.execEventCallback({ eventType: EEvent.REQUEST, requestId: payload.requestId, payload });
-        return this.socketInstance.socket?.send(JSON.stringify(payload));
       },
       bumpActivity: () => {
         this.socketInstance.lastActivity = Date.now();
       },
-      query: (params: IQuery) => this.runQuery(params),
+      query: (params: IBDQuery) => this.execQuery(params),
     };
   }
 
@@ -113,99 +118,88 @@ export class BoilingData {
         this.logger.error(err);
         reject(err);
       };
-      sock.socket.onmessage = (msg: any) => {
+      sock.socket.onmessage = (msg: MessageEvent) => {
         return this.handleSocketMessage(msg);
       };
     });
   }
 
-  public async runQuery(params: IBDQuery) {
+  public async execQuery(params: IBDQuery) {
     this.logger.info("runQuery:", params);
     this.socketInstance.bumpActivity();
     const requestId = uuidv4();
-    const payload: IQuery = {
+    const payload: IBDDataQuery = {
       messageType: EMessageTypes.SQL_QUERY,
       sql: params.sql,
       keys: params.keys || [],
       requestId,
     };
     this.socketInstance.queries.set(requestId, {
-      recievedBatches: [],
+      recievedBatches: new Set(),
     });
     this.socketInstance.queryCallbacks.set(requestId, {
       onData: params.callbacks?.onData,
       onInfo: params.callbacks?.onInfo,
       onRequest: params.callbacks?.onRequest,
-      onQueryFinished: params.callbacks?.onQueryFinished,
       onError: params.callbacks?.onError,
       onLogError: params.callbacks?.onError,
       onLogWarn: params.callbacks?.onLogWarn,
       onLogInfo: params.callbacks?.onLogInfo,
       onLogDebug: params.callbacks?.onLogDebug,
       onLambdaEvent: params.callbacks?.onLambdaEvent,
+      onQueryFinished: params.callbacks?.onQueryFinished,
     });
-    this.socketInstance.sendQuery(payload);
+    this.socketInstance.send(payload);
   }
 
   private getStatus() {
-    if (Date.now() - this.socketInstance.lastActivity < 5 * 60 * 1000) {
-      this.socketInstance.query({ sql: "SELECT * FROM status;" });
-    }
-    this.statusTimer = setTimeout(() => this.getStatus(), 60000); // call me again after 1 min
+    // Once a minute fetch full status if fetched status is older than 5 mins
+    const { lastActivity } = this.socketInstance;
+    const fiveMinsMs = 5 * 60 * 1000;
+    if (Date.now() - lastActivity < fiveMinsMs) this.execQuery({ sql: "SELECT * FROM status;" });
+    this.statusTimer = setTimeout(() => this.getStatus(), 60000);
+  }
+
+  private processBatchInfo(message: unknown) {
+    if (!isDataResponse(message)) return;
+    // Keeps track of the recieved batches, executes event when all batches have been recieved.
+    if (!message.requestId || !message.batchSerial || !message.totalBatches || message.batchSerial <= 0) return;
+    const queryInfo = this.socketInstance.queries.get(message?.requestId);
+    if (!queryInfo) return;
+    queryInfo.recievedBatches.add(message.batchSerial);
+    if (queryInfo.recievedBatches.size < message.totalBatches) return;
+    this.execEventCallback({ eventType: EEvent.QUERY_FINISHED, requestId: message.requestId, payload: message });
   }
 
   private execEventCallback(event: IEvent) {
-    const cbName = mapEventToCallbackName(event.eventType);
-    // this.logger.info("CALLBACK:", cbName, event);
-    if (this.props?.globalCallbacks && this.props.globalCallbacks[cbName]) {
-      const f = this.props.globalCallbacks[cbName]; // (event.payload);
+    const cbName = mapEventToCallbackName(event);
+    if (this.props?.globalCallbacks) {
+      const f = this.props.globalCallbacks[cbName];
       if (f) f(event.payload);
     }
-    if (!!event.requestId && !!this.socketInstance.queryCallbacks.has(event.requestId)) {
-      const cbs = this.socketInstance.queryCallbacks.get(event.requestId);
-      if (cbs && cbs[cbName]) {
-        const f = cbs[cbName];
-        if (f) f(event.payload);
-      }
+    if (!event.requestId || !this.socketInstance.queryCallbacks.has(event.requestId)) return;
+    const cbs = this.socketInstance.queryCallbacks.get(event.requestId);
+    if (cbs && cbs.hasOwnProperty(cbName)) {
+      const f = cbs[cbName];
+      if (f) f(event.payload);
+    }
+    if (event.eventType == EEvent.DATA) {
+      this.processBatchInfo(event.payload);
     }
   }
 
-  private handleSocketMessage(result: any) {
-    if (result.data.length <= 0) return;
-    const message = JSON.parse(result.data);
+  private handleSocketMessage(result: MessageEvent) {
+    const data = result?.data?.toString();
+    if (data.length <= 0) return this.logger.info("No data on WebSocket incoming message");
+    let message;
     try {
-      switch (message?.messageType) {
-        case "LAMBDA_EVENT":
-          this.execEventCallback({ eventType: EEvent.LAMBDA_EVENT, requestId: message.requestId, payload: message });
-          break;
-        case "INFO":
-          this.execEventCallback({ eventType: EEvent.INFO, requestId: message.requestId, payload: message });
-          break;
-        case "DATA":
-          this.execEventCallback({ eventType: EEvent.DATA, requestId: message.requestId, payload: message });
-          //processBatchInfo(message);
-          break;
-        case "LOG_MESSAGE":
-          if (message.logLevel == "ERROR") {
-            this.execEventCallback({ eventType: EEvent.LOG_ERROR, requestId: message.requestId, payload: message });
-          } else if (message.logLevel == "WARN") {
-            this.execEventCallback({ eventType: EEvent.LOG_WARN, requestId: message.requestId, payload: message });
-          } else if (message.logLevel == "INFO") {
-            this.execEventCallback({ eventType: EEvent.LOG_INFO, requestId: message.requestId, payload: message });
-          } else if (message.logLevel == "DEBUG") {
-            this.execEventCallback({ eventType: EEvent.LOG_DEBUG, requestId: message.requestId, payload: message });
-          }
-          break;
-        default:
-          this.execEventCallback({ eventType: EEvent.INFO, requestId: message.requestId, payload: message });
-      }
-    } catch (err) {
-      console.error(err);
-      this.execEventCallback({
-        eventType: EEvent.LOG_ERROR,
-        requestId: message.requestId,
-        payload: { error: err, ...message },
-      });
+      message = JSON.parse(data);
+      const eventType = message?.messageType == "LOG_MESSAGE" ? message?.logLevel : message?.messageType;
+      this.execEventCallback({ eventType, requestId: message.requestId, payload: message });
+    } catch (error) {
+      console.error(error);
+      const payload = { error, ...message };
+      this.execEventCallback({ eventType: EEvent.LOG_ERROR, requestId: message?.requestId, payload });
     }
   }
 }

@@ -30,7 +30,7 @@ describe("boilingdata", () => {
     await bdInstance.connect();
     logger.info("CONNECTED.");
     await new Promise((resolve, reject) => {
-      bdInstance.runQuery({
+      bdInstance.execQuery({
         sql: `SELECT * FROM parquet_scan('s3://boilingdata-demo/demo2.parquet:m=0') LIMIT 1;`,
         keys: [],
         callbacks: {
