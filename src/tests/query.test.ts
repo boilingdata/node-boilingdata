@@ -1,66 +1,72 @@
-import { BoilingData } from "../boilingdata/boilingdata";
+import { globalCallbacksList, IBDDataResponse } from "../boilingdata/boilingdata.api";
+import { BoilingData, isDataResponse } from "../boilingdata/boilingdata";
 import { createLogger } from "bunyan";
 
 jest.setTimeout(30000);
-const logger = createLogger({ name: "TEST", level: "info" });
+
+const logLevel = "error";
+const logger = createLogger({ name: "TEST", level: logLevel });
 const username = process.env["BD_USERNAME"];
 const password = process.env["BD_PASSWORD"];
 if (!password || !username) throw new Error("Set BD_USERNAME and BD_PASSWORD envs");
-const bdInstance = new BoilingData({
-  username,
-  password,
-  globalCallbacks: {
-    onData: (d: any) => logger.info(d),
-    onError: (d: any) => logger.info(d),
-    onInfo: (d: any) => logger.info(d),
-    onLambdaEvent: (d: any) => logger.info(d),
-    onLogDebug: (d: any) => logger.info(d),
-    onLogError: (d: any) => logger.error(d),
-    onLogInfo: (d: any) => logger.info(d),
-    onLogWarn: (d: any) => logger.warn(d),
-    onQueryFinished: (d: any) => logger.info(d),
-    onRequest: (d: any) => logger.info(d),
-    onSocketClose: () => logger.info("socket closed"),
-    onSocketOpen: () => logger.info("socket opened"),
-  },
-});
+
+const globalCallbacks = globalCallbacksList
+  .map((cb: string) => ({ [cb]: (d: unknown) => logger.info(d) }))
+  .reduce((obj, item) => ({ ...obj, ...item }), {});
+globalCallbacks.onSocketOpen = () => {
+  logger.info("socket open");
+  return undefined;
+};
+globalCallbacks.onSocketClose = () => {
+  logger.info("socket closed");
+  return undefined;
+};
+const bdInstance = new BoilingData({ username, password, globalCallbacks, logLevel });
 
 describe("boilingdata", () => {
   beforeAll(async () => {
     await bdInstance.connect();
-    logger.info("CONNECTED.");
+    logger.info("connected.");
   });
 
   afterAll(async () => {
     await bdInstance.close();
-    logger.info("SOCKET CLOSED.");
+    logger.info("connection closed.");
   });
 
   it("run single query", async () => {
-    await new Promise((resolve, reject) => {
+    const rows = await new Promise<any[]>((resolve, reject) => {
+      let rows: any[] = [];
       bdInstance.execQuery({
-        sql: `SELECT * FROM parquet_scan('s3://boilingdata-demo/demo2.parquet:m=0') LIMIT 1;`,
+        sql: `SELECT * FROM parquet_scan('s3://boilingdata-demo/demo2.parquet:m=0') LIMIT 2;`,
         keys: [],
         callbacks: {
-          onData: (data: any) => resolve(data),
-          onError: (data: any) => reject(data),
+          onData: (data: IBDDataResponse | unknown) => {
+            if (isDataResponse(data)) data.data.map(row => rows.push(row));
+            resolve(rows);
+          },
+          onLogError: (data: any) => reject(data),
         },
       });
     });
-    logger.info("QUERY DONE.");
+    console.log(rows);
   });
 
   it("run multi-key query", async () => {
-    await new Promise((resolve, reject) => {
+    const rows = await new Promise<any[]>((resolve, reject) => {
+      let r: any[] = [];
       bdInstance.execQuery({
-        sql: `SELECT 's3://KEY' AS key, COUNT(*) AS count FROM parquet_scan('s3://KEY') LIMIT 1;`,
+        sql: `SELECT 's3://KEY' AS key, COUNT(*) AS count FROM parquet_scan('s3://KEY');`,
         keys: ["s3://boilingdata-demo/demo.parquet", "s3://boilingdata-demo/demo2.parquet"],
         callbacks: {
-          onData: (data: any) => resolve(data),
-          onError: (data: any) => reject(data),
+          onData: (data: IBDDataResponse | unknown) => {
+            if (isDataResponse(data)) data.data.map(row => r.push(row));
+          },
+          onQueryFinished: () => resolve(r),
+          onLogError: (data: any) => reject(data),
         },
       });
     });
-    logger.info("QUERY DONE.");
+    console.log(rows);
   });
 });

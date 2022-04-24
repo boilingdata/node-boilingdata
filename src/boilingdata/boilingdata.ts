@@ -10,13 +10,12 @@ export interface IBDCallbacks {
   onInfo?: (data: unknown) => void;
   onRequest?: (data: unknown) => void;
   onQueryFinished?: (data: unknown) => void;
-  onError?: (data: unknown) => void;
   onLogError?: (data: unknown) => void;
   onLogWarn?: (data: unknown) => void;
   onLogInfo?: (data: unknown) => void;
   onLogDebug?: (data: unknown) => void;
   onLambdaEvent?: (data: unknown) => void;
-  onSocketOpen?: (socketInstance: ISocketInstance) => void;
+  onSocketOpen?: () => void;
   onSocketClose?: () => void;
 }
 
@@ -34,7 +33,7 @@ export interface IBDQuery {
   callbacks?: IBDCallbacks;
 }
 
-interface ISocketInstance {
+export interface ISocketInstance {
   lastActivity: number;
   queries: Map<string, { recievedBatches: Set<number> }>;
   send: (payload: IBDDataQuery) => void;
@@ -68,7 +67,7 @@ function mapEventToCallbackName(event: IEvent): ECallbackNames {
   return entry[1];
 }
 
-function isDataResponse(data: IBDDataResponse | unknown): data is IBDDataResponse {
+export function isDataResponse(data: IBDDataResponse | unknown): data is IBDDataResponse {
   return (data as IBDDataResponse).messageType !== undefined && (data as IBDDataResponse).messageType === "DATA";
 }
 
@@ -96,7 +95,7 @@ export class BoilingData {
 
   public async close(): Promise<void> {
     if (this.statusTimer) clearTimeout(this.statusTimer);
-    this.socketInstance.socket?.close();
+    this.socketInstance.socket?.close(1000);
   }
 
   public async connect(): Promise<ISocketInstance> {
@@ -111,7 +110,7 @@ export class BoilingData {
       };
       sock.socket.onopen = () => {
         this.getStatus();
-        if (!!cbs?.onSocketOpen) cbs.onSocketOpen(this.socketInstance);
+        if (!!cbs?.onSocketOpen) cbs.onSocketOpen();
         resolve(this.socketInstance);
       };
       sock.socket.onerror = (err: any) => {
@@ -141,8 +140,7 @@ export class BoilingData {
       onData: params.callbacks?.onData,
       onInfo: params.callbacks?.onInfo,
       onRequest: params.callbacks?.onRequest,
-      onError: params.callbacks?.onError,
-      onLogError: params.callbacks?.onError,
+      onLogError: params.callbacks?.onLogError,
       onLogWarn: params.callbacks?.onLogWarn,
       onLogInfo: params.callbacks?.onLogInfo,
       onLogDebug: params.callbacks?.onLogDebug,

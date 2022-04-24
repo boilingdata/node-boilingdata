@@ -38,8 +38,8 @@ export enum EMessageTypes {
 }
 
 export enum EEvent {
-  DATA = "DATA",
   REQUEST = "REQUEST",
+  DATA = "DATA",
   INFO = "INFO",
   LOG_ERROR = "LOG_ERROR",
   LOG_WARN = "LOG_WARN",
@@ -47,4 +47,20 @@ export enum EEvent {
   LOG_DEBUG = "LOG_DEBUG",
   LAMBDA_EVENT = "LAMBDA_EVENT",
   QUERY_FINISHED = "QUERY_FINISHED",
+  SOCKET_OPEN = "SOCKET_OPEN",
+  SOCKET_CLOSED = "SOCKET_CLOSED",
 }
+
+export const globalCallbacksList = [
+  "onRequest",
+  "onData",
+  "onInfo",
+  "onLogError",
+  "onLogWarn",
+  "onLogInfo",
+  "onLogDebug",
+  "onLammbdaEvent",
+  "onQueryFinished",
+  "onSocketOpen",
+  "onSocketClose",
+];
