@@ -36,14 +36,14 @@ describe("boilingdata", () => {
 
   it("run single query", async () => {
     const rows = await new Promise<any[]>((resolve, reject) => {
-      let rows: any[] = [];
+      const r: any[] = [];
       bdInstance.execQuery({
         sql: `SELECT * FROM parquet_scan('s3://boilingdata-demo/demo2.parquet:m=0') LIMIT 2;`,
         keys: [],
         callbacks: {
           onData: (data: IBDDataResponse | unknown) => {
-            if (isDataResponse(data)) data.data.map(row => rows.push(row));
-            resolve(rows);
+            if (isDataResponse(data)) data.data.map(row => r.push(row));
+            resolve(r);
           },
           onLogError: (data: any) => reject(data),
         },
@@ -54,7 +54,7 @@ describe("boilingdata", () => {
 
   it("run multi-key query", async () => {
     const rows = await new Promise<any[]>((resolve, reject) => {
-      let r: any[] = [];
+      const r: any[] = [];
       bdInstance.execQuery({
         sql: `SELECT 's3://KEY' AS key, COUNT(*) AS count FROM parquet_scan('s3://KEY');`,
         keys: ["s3://boilingdata-demo/demo.parquet", "s3://boilingdata-demo/demo2.parquet"],

@@ -37,7 +37,7 @@ export interface ISocketInstance {
   lastActivity: number;
   queries: Map<string, { recievedBatches: Set<number> }>;
   send: (payload: IBDDataQuery) => void;
-  query: (params: IBDQuery) => Promise<void>;
+  query: (params: IBDQuery) => void;
   bumpActivity: () => void;
   socket?: WebSocket;
   queryCallbacks: Map<string, IBDCallbacks>;
@@ -98,32 +98,34 @@ export class BoilingData {
     this.socketInstance.socket?.close(1000);
   }
 
-  public async connect(): Promise<ISocketInstance> {
-    return new Promise(async (resolve, reject) => {
+  public async connect(): Promise<void> {
+    return new Promise((resolve, reject) => {
       const sock = this.socketInstance;
       const cbs = this.props.globalCallbacks;
-      this.creds = await getBoilingDataCredentials(this.props.username, this.props.password);
-      this.logger.debug(this.creds);
-      sock.socket = new WebSocket(this.creds.signedWebsocketUrl);
-      sock.socket.onclose = () => {
-        if (!!cbs?.onSocketClose) cbs.onSocketClose();
-      };
-      sock.socket.onopen = () => {
-        this.getStatus();
-        if (!!cbs?.onSocketOpen) cbs.onSocketOpen();
-        resolve(this.socketInstance);
-      };
-      sock.socket.onerror = (err: any) => {
-        this.logger.error(err);
-        reject(err);
-      };
-      sock.socket.onmessage = (msg: MessageEvent) => {
-        return this.handleSocketMessage(msg);
-      };
+      getBoilingDataCredentials(this.props.username, this.props.password).then(creds => {
+        this.creds = creds;
+        this.logger.debug(this.creds);
+        sock.socket = new WebSocket(this.creds.signedWebsocketUrl);
+        sock.socket.onclose = () => {
+          if (cbs?.onSocketClose) cbs.onSocketClose();
+        };
+        sock.socket.onopen = () => {
+          this.getStatus();
+          if (cbs?.onSocketOpen) cbs.onSocketOpen();
+          resolve();
+        };
+        sock.socket.onerror = (err: any) => {
+          this.logger.error(err);
+          reject(err);
+        };
+        sock.socket.onmessage = (msg: MessageEvent) => {
+          return this.handleSocketMessage(msg);
+        };
+      });
     });
   }
 
-  public async execQuery(params: IBDQuery) {
+  public execQuery(params: IBDQuery): void {
     this.logger.info("runQuery:", params);
     this.socketInstance.bumpActivity();
     const requestId = uuidv4();
@@ -150,7 +152,7 @@ export class BoilingData {
     this.socketInstance.send(payload);
   }
 
-  private getStatus() {
+  private getStatus(): void {
     // Once a minute fetch full status if fetched status is older than 5 mins
     const { lastActivity } = this.socketInstance;
     const fiveMinsMs = 5 * 60 * 1000;
@@ -158,7 +160,7 @@ export class BoilingData {
     this.statusTimer = setTimeout(() => this.getStatus(), 60000);
   }
 
-  private processBatchInfo(message: unknown) {
+  private processBatchInfo(message: unknown): void {
     if (!isDataResponse(message)) return;
     // Keeps track of the recieved batches, executes event when all batches have been recieved.
     if (!message.requestId || !message.batchSerial || !message.totalBatches || message.batchSerial <= 0) return;
@@ -169,7 +171,7 @@ export class BoilingData {
     this.execEventCallback({ eventType: EEvent.QUERY_FINISHED, requestId: message.requestId, payload: message });
   }
 
-  private execEventCallback(event: IEvent) {
+  private execEventCallback(event: IEvent): void {
     const cbName = mapEventToCallbackName(event);
     if (this.props?.globalCallbacks) {
       const f = this.props.globalCallbacks[cbName];
@@ -177,7 +179,7 @@ export class BoilingData {
     }
     if (!event.requestId || !this.socketInstance.queryCallbacks.has(event.requestId)) return;
     const cbs = this.socketInstance.queryCallbacks.get(event.requestId);
-    if (cbs && cbs.hasOwnProperty(cbName)) {
+    if (cbs && Object.prototype.hasOwnProperty.call(cbs, cbName)) {
       const f = cbs[cbName];
       if (f) f(event.payload);
     }
@@ -186,7 +188,7 @@ export class BoilingData {
     }
   }
 
-  private handleSocketMessage(result: MessageEvent) {
+  private handleSocketMessage(result: MessageEvent): void {
     const data = result?.data?.toString();
     if (data.length <= 0) return this.logger.info("No data on WebSocket incoming message");
     let message;
