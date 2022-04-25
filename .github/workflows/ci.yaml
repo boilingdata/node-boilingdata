@@ -2,23 +2,22 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
-    branches: [master]
+    branches: [main]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: npmjs
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: 14
       - name: CI
         run: |
-          yarn audit
+          yarn install
           yarn build
           yarn lint
           yarn test
-      - name: codecov
-        run: bash <(curl -s https://codecov.io/bash)
