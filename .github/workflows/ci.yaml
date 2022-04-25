@@ -16,6 +16,9 @@ jobs:
         with:
           node-version: 14
       - name: CI
+        env:
+          BD_USERNAME: ${{ secrets.BD_USERNAME }}
+          BD_PASSWORD: ${{ secrets.BD_PASSWORD }}
         run: |
           yarn install
           yarn build
