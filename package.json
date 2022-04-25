@@ -1,6 +1,6 @@
 {
-  "name": "boilingdata",
-  "version": "0.0.1",
+  "name": "@boilingdata/node-boilingdata",
+  "version": "0.0.10",
   "description": "BoilingData client",
   "main": "dist/cjs/index.js",
   "types": "dist/cjs/index.d.ts",
@@ -19,7 +19,12 @@
     "BoilingData",
     "DuckDB",
     "Serverless",
-    "Lambda"
+    "Lambda",
+    "S3",
+    "Parquet",
+    "CSV",
+    "JSON",
+    "ETL"
   ],
   "scripts": {
     "prebuild": "yarn install --frozen-lockfile",
