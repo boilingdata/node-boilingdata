@@ -6,6 +6,7 @@ jest.setTimeout(30000);
 
 const logLevel = "error";
 const logger = createLogger({ name: "TEST", level: logLevel });
+console.log(process.env);
 const username = process.env["BD_USERNAME"];
 const password = process.env["BD_PASSWORD"];
 if (!password || !username) throw new Error("Set BD_USERNAME and BD_PASSWORD envs");
