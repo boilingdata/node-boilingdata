@@ -7,6 +7,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment: npmjs
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
@@ -22,6 +23,7 @@ jobs:
   publish-npmjs:
     needs: build
     runs-on: ubuntu-latest
+    environment: npmjs
     steps:
       - uses: actions/checkout@v1
       - uses: actions/setup-node@v1
