@@ -49,7 +49,7 @@ describe("boilingdata", () => {
         },
       });
     });
-    console.log(rows);
+    expect(rows.sort()).toMatchSnapshot();
   });
 
   it("run multi-key query", async () => {
@@ -67,6 +67,35 @@ describe("boilingdata", () => {
         },
       });
     });
-    console.log(rows);
+    expect(rows.sort((a, b) => a.key.localeCompare(b.key))).toMatchSnapshot();
+  });
+
+  it("run all meta queries", async () => {
+    const metaQueries = [
+      "SELECT * FROM list('s3://');",
+      "SELECT * FROM list('s3://boilingdata-demo/');",
+      "SELECT * FROM boilingdata;",
+      "SELECT * FROM pragmas;",
+      "SELECT * FROM status;",
+    ];
+    const rows = await Promise.all(
+      metaQueries.map(sql => {
+        return new Promise<any[]>((resolve, reject) => {
+          const r: any[] = [];
+          bdInstance.execQuery({
+            sql,
+            keys: [],
+            callbacks: {
+              onData: (data: IBDDataResponse | unknown) => {
+                if (isDataResponse(data)) data.data.map(row => r.push(row));
+              },
+              onQueryFinished: () => resolve(r),
+              onLogError: (data: any) => reject(data),
+            },
+          });
+        });
+      }),
+    );
+    expect(rows.sort()).toMatchSnapshot();
   });
 });

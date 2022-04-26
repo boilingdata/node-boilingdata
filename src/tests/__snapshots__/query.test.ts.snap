@@ -1,0 +1,119 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`boilingdata run all meta queries 1`] = `
+Array [
+  Array [],
+  Array [
+    Object {
+      "CreationDate": "2021-12-06T12:06:12.060Z",
+      "Name": "boilingdata-demo",
+    },
+  ],
+  Array [
+    Object {
+      "awsAccountId": "589434896614",
+      "externalId": "OPL0DcV9pKiQg7/YXxiKQkwOmYQk7wj9FoBS4P7GNI8=",
+    },
+  ],
+  Array [
+    Object {
+      "pragma": "s3AccessRoleArn='arn:aws:iam::123456789012:role/EXAMPLE';",
+    },
+  ],
+  Array [
+    Object {
+      "ETag": "\\"83cc3a5587b8c0b16873b2485d063da3-93\\"",
+      "Key": "demo.parquet",
+      "LastModified": "2021-12-06T12:35:46.000Z",
+      "Size": 777673114,
+      "StorageClass": "STANDARD",
+    },
+    Object {
+      "ETag": "\\"e10d77e8fe329838bb8984659e5090cb-103\\"",
+      "Key": "demo2.duckdb.zst",
+      "LastModified": "2022-04-17T12:15:24.000Z",
+      "Size": 858335085,
+      "StorageClass": "STANDARD",
+    },
+    Object {
+      "ETag": "\\"83cc3a5587b8c0b16873b2485d063da3-93\\"",
+      "Key": "demo2.parquet",
+      "LastModified": "2022-04-17T12:13:42.000Z",
+      "Size": 777673114,
+      "StorageClass": "STANDARD",
+    },
+    Object {
+      "ETag": "",
+      "LastModified": "",
+      "Name": "cc-demo",
+      "Size": 0,
+      "StorageClass": "",
+    },
+    Object {
+      "ETag": "",
+      "LastModified": "",
+      "Name": "uploads",
+      "Size": 0,
+      "StorageClass": "",
+    },
+  ],
+]
+`;
+
+exports[`boilingdata run multi-key query 1`] = `
+Array [
+  Object {
+    "count": 44459136,
+    "key": "s3://boilingdata-demo/demo.parquet",
+  },
+  Object {
+    "count": 44459136,
+    "key": "s3://boilingdata-demo/demo2.parquet",
+  },
+]
+`;
+
+exports[`boilingdata run single query 1`] = `
+Array [
+  Object {
+    "DOLocationID": 145,
+    "PULocationID": 145,
+    "RatecodeID": 1,
+    "VendorID": 1,
+    "congestion_surcharge": 0,
+    "extra": 0.5,
+    "fare_amount": 3,
+    "improvement_surcharge": 0.3,
+    "mta_tax": 0.5,
+    "passenger_count": 1,
+    "payment_type": 2,
+    "store_and_fwd_flag": "N",
+    "tip_amount": 0,
+    "tolls_amount": 0,
+    "total_amount": 4.3,
+    "tpep_dropoff_datetime": 1556669808000,
+    "tpep_pickup_datetime": 1556669690000,
+    "trip_distance": 0,
+  },
+  Object {
+    "DOLocationID": 145,
+    "PULocationID": 145,
+    "RatecodeID": 1,
+    "VendorID": 1,
+    "congestion_surcharge": 0,
+    "extra": 0.5,
+    "fare_amount": 3,
+    "improvement_surcharge": 0.3,
+    "mta_tax": 0.5,
+    "passenger_count": 1,
+    "payment_type": 2,
+    "store_and_fwd_flag": "N",
+    "tip_amount": 0,
+    "tolls_amount": 0,
+    "total_amount": 4.3,
+    "tpep_dropoff_datetime": 1556671047000,
+    "tpep_pickup_datetime": 1556670954000,
+    "trip_distance": 1.5,
+  },
+]
+`;
