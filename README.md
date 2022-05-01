@@ -8,10 +8,10 @@ yarn add @boilingdata/node-boilingdata
 ```
 
 ```typescript
-import { BoilingData, isDataResponse } from "../boilingdata/boilingdata";
+import { BoilingData, isDataResponse } from "@boilingdata/node-boilingdata";
 
 async function main() {
-  const bdInstance = new BoilingData({ process.env["BD_USERNAME"], process.env["BD_PASSWORD"] });
+  const bdInstance = new BoilingData({ username: process.env["BD_USERNAME"], password: process.env["BD_PASSWORD"] });
   await bdInstance.connect();
   const rows = await new Promise<any[]>((resolve, reject) => {
     let r: any[] = [];
