@@ -1,4 +1,4 @@
-# BoilingData JS/TS SDKConvert Parquet to CSV
+# BoilingData JS/TS SDK
 
 ![CI](https://github.com/boilingdata/node-boilingdata/workflows/CI/badge.svg?branch=main)
 ![BuiltBy](https://img.shields.io/badge/TypeScript-Lovers-black.svg "img.shields.io")
