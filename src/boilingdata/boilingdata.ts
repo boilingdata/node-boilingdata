@@ -1,6 +1,6 @@
 import { createLogger } from "bunyan";
 import { BDCredentials, getBoilingDataCredentials } from "../common/identity";
-import { EEvent, EMessageTypes, IBDDataQuery, IBDDataResponse } from "./boilingdata.api";
+import { EEngineTypes, EEvent, EMessageTypes, IBDDataQuery, IBDDataResponse } from "./boilingdata.api";
 import { v4 as uuidv4 } from "uuid";
 import { WebSocket, MessageEvent } from "ws";
 import { inspect } from "util";
@@ -28,6 +28,7 @@ export interface IBoilingData {
 
 export interface IBDQuery {
   sql: string;
+  engine?: EEngineTypes.DUCKDB | EEngineTypes.SQLITE;
   keys?: string[];
   requestId?: string;
   callbacks?: IBDCallbacks;
@@ -133,6 +134,7 @@ export class BoilingData {
       messageType: EMessageTypes.SQL_QUERY,
       sql: params.sql,
       keys: params.keys || [],
+      engine: params.engine ?? EEngineTypes.DUCKDB,
       requestId,
     };
     this.socketInstance.queries.set(requestId, {

@@ -2,9 +2,10 @@
 // https://www.boilingdata.com/apidoc.html
 
 export interface IBDDataQuery {
-  messageType: string; // "SQL_QUERY"
+  messageType: string; // SQL_QUERY
   requestId: string;
   sql: string;
+  engine?: string; // DUCKDB (default), SQLITE
   keys?: string[];
   crossRegionPolicy?: string; // DISALLOWED, ALLOWED, SELECTED
   allowedRegions?: string[];
@@ -35,6 +36,11 @@ export interface IBDDataResponse {
 
 export enum EMessageTypes {
   SQL_QUERY = "SQL_QUERY",
+}
+
+export enum EEngineTypes {
+  DUCKDB = "DUCKDB",
+  SQLITE = "SQLITE",
 }
 
 export enum EEvent {

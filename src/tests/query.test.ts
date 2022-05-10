@@ -1,4 +1,4 @@
-import { globalCallbacksList, IBDDataResponse } from "../boilingdata/boilingdata.api";
+import { EEngineTypes, globalCallbacksList, IBDDataResponse } from "../boilingdata/boilingdata.api";
 import { BoilingData, isDataResponse } from "../boilingdata/boilingdata";
 import { createLogger } from "bunyan";
 
@@ -23,7 +23,7 @@ globalCallbacks.onSocketClose = () => {
 };
 const bdInstance = new BoilingData({ username, password, globalCallbacks, logLevel });
 
-describe("boilingdata", () => {
+describe("boilingdata with DuckDB", () => {
   beforeAll(async () => {
     await bdInstance.connect();
     logger.info("connected.");
@@ -39,6 +39,7 @@ describe("boilingdata", () => {
       const r: any[] = [];
       bdInstance.execQuery({
         sql: `SELECT * FROM parquet_scan('s3://boilingdata-demo/demo2.parquet:m=0') LIMIT 2;`,
+        // engine: EEngineTypes.DUCKDB, // DuckDB is the default
         keys: [],
         callbacks: {
           onData: (data: IBDDataResponse | unknown) => {
@@ -57,6 +58,7 @@ describe("boilingdata", () => {
       const r: any[] = [];
       bdInstance.execQuery({
         sql: `SELECT 's3://KEY' AS key, COUNT(*) AS count FROM parquet_scan('s3://KEY');`,
+        engine: EEngineTypes.DUCKDB,
         keys: ["s3://boilingdata-demo/demo.parquet", "s3://boilingdata-demo/demo2.parquet"],
         callbacks: {
           onData: (data: IBDDataResponse | unknown) => {
@@ -85,6 +87,7 @@ describe("boilingdata", () => {
           bdInstance.execQuery({
             sql,
             keys: [],
+            engine: EEngineTypes.DUCKDB,
             callbacks: {
               onData: (data: IBDDataResponse | unknown) => {
                 if (isDataResponse(data)) data.data.map(row => r.push(row));
@@ -96,6 +99,37 @@ describe("boilingdata", () => {
         });
       }),
     );
+    expect(rows.sort()).toMatchSnapshot();
+  });
+});
+
+describe("boilingdata with SQLite3", () => {
+  beforeAll(async () => {
+    await bdInstance.connect();
+    logger.info("connected.");
+  });
+
+  afterAll(async () => {
+    await bdInstance.close();
+    logger.info("connection closed.");
+  });
+
+  it("run single query", async () => {
+    const rows = await new Promise<any[]>((resolve, reject) => {
+      const r: any[] = [];
+      bdInstance.execQuery({
+        sql: `SELECT * FROM sqlite('s3://boilingdata-demo/uploads/userdata1.sqlite3','userdata1') LIMIT 2;`,
+        engine: EEngineTypes.SQLITE,
+        keys: [],
+        callbacks: {
+          onData: (data: IBDDataResponse | unknown) => {
+            if (isDataResponse(data)) data.data.map(row => r.push(row));
+            resolve(r);
+          },
+          onLogError: (data: any) => reject(data),
+        },
+      });
+    });
     expect(rows.sort()).toMatchSnapshot();
   });
 });
