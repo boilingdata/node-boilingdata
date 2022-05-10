@@ -103,7 +103,7 @@ describe("boilingdata with DuckDB", () => {
   });
 });
 
-describe.only("boilingdata with SQLite3", () => {
+describe("boilingdata with SQLite3", () => {
   beforeAll(async () => {
     await bdInstance.connect();
     logger.info("connected.");
@@ -126,7 +126,6 @@ describe.only("boilingdata with SQLite3", () => {
             if (isDataResponse(data)) data.data.map(row => r.push(row));
             resolve(r);
           },
-          onInfo: (data: any) => console.log(data),
           onLogError: (data: any) => reject(data),
         },
       });
