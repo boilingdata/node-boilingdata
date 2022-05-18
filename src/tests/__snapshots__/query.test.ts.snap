@@ -118,6 +118,56 @@ Array [
 ]
 `;
 
+exports[`boilingdata with Glue Tables can do partition filter push down 1`] = `
+Array [
+  Object {
+    "count": 370164,
+    "s3key": "s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=8/type=yellow/part-r-00268-6e222bd6-47be-424a-a29a-606961a23de1.gz.parquet",
+  },
+  Object {
+    "count": 370164,
+    "s3key": "s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=8/type=yellow/part-r-00268-90b05037-c70b-4bc7-978c-b53b496c4751.gz.parquet",
+  },
+  Object {
+    "count": 370330,
+    "s3key": "s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=8/type=yellow/part-r-00269-6e222bd6-47be-424a-a29a-606961a23de1.gz.parquet",
+  },
+  Object {
+    "count": 370330,
+    "s3key": "s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=8/type=yellow/part-r-00269-90b05037-c70b-4bc7-978c-b53b496c4751.gz.parquet",
+  },
+  Object {
+    "count": 370214,
+    "s3key": "s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=8/type=yellow/part-r-00270-6e222bd6-47be-424a-a29a-606961a23de1.gz.parquet",
+  },
+]
+`;
+
+exports[`boilingdata with Glue Tables can read S3 Keys from Glue Table 1`] = `
+Array [
+  Object {
+    "count": 372459,
+    "s3key": "s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=1/type=yellow/part-r-00000-6e222bd6-47be-424a-a29a-606961a23de1.gz.parquet",
+  },
+  Object {
+    "count": 372459,
+    "s3key": "s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=1/type=yellow/part-r-00000-90b05037-c70b-4bc7-978c-b53b496c4751.gz.parquet",
+  },
+  Object {
+    "count": 372633,
+    "s3key": "s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=1/type=yellow/part-r-00001-6e222bd6-47be-424a-a29a-606961a23de1.gz.parquet",
+  },
+  Object {
+    "count": 372633,
+    "s3key": "s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=1/type=yellow/part-r-00001-90b05037-c70b-4bc7-978c-b53b496c4751.gz.parquet",
+  },
+  Object {
+    "count": 372654,
+    "s3key": "s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=1/type=yellow/part-r-00002-6e222bd6-47be-424a-a29a-606961a23de1.gz.parquet",
+  },
+]
+`;
+
 exports[`boilingdata with SQLite3 run single query 1`] = `
 Array [
   Object {
