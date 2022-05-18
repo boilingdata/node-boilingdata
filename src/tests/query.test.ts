@@ -133,3 +133,53 @@ describe("boilingdata with SQLite3", () => {
     expect(rows.sort()).toMatchSnapshot();
   });
 });
+
+describe("boilingdata with Glue Tables", () => {
+  beforeAll(async () => {
+    await bdInstance.connect();
+    logger.info("connected.");
+  });
+
+  afterAll(async () => {
+    await bdInstance.close();
+    logger.info("connection closed.");
+  });
+
+  it("can read S3 Keys from Glue Table", async () => {
+    const rows = await new Promise<any[]>((resolve, _reject) => {
+      const r: any[] = [];
+      bdInstance.execQuery({
+        sql: `SELECT 's3://KEY' AS s3key, COUNT(*) AS count FROM parquet_scan('s3://KEY');`,
+        engine: EEngineTypes.DUCKDB,
+        keys: ["glue.default.nyctaxis"],
+        callbacks: {
+          onData: (data: IBDDataResponse | unknown) => {
+            if (isDataResponse(data)) data.data.map(row => r.push(row));
+          },
+          onQueryFinished: () => resolve(r),
+          // onLogError: (data: any) => reject(data),
+        },
+      });
+    });
+    expect(rows.sort((a, b) => a.s3key.localeCompare(b.s3key))).toMatchSnapshot();
+  });
+
+  it("can do partition filter push down", async () => {
+    const rows = await new Promise<any[]>((resolve, _reject) => {
+      const r: any[] = [];
+      bdInstance.execQuery({
+        sql: `SELECT 's3://KEY' AS s3key, COUNT(*) AS count FROM parquet_scan('s3://KEY') WHERE year=2009 AND month=8;`,
+        engine: EEngineTypes.DUCKDB,
+        keys: ["glue.default.nyctaxis"],
+        callbacks: {
+          onData: (data: IBDDataResponse | unknown) => {
+            if (isDataResponse(data)) data.data.map(row => r.push(row));
+          },
+          onQueryFinished: () => resolve(r),
+          // onLogError: (data: any) => reject(data),
+        },
+      });
+    });
+    expect(rows.sort((a, b) => a.s3key.localeCompare(b.s3key))).toMatchSnapshot();
+  });
+});
