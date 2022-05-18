@@ -40,7 +40,7 @@ This repository contains JS/TS BoilingData SDK. Please see the integration tests
 
 ### Callbacks
 
-The SDK uses the BoilingData Websocket API in the background, meaning that events can arrive at any time. We use a range of global and query-specific callbacks to allow you to hook into the events that you care about. 
+The SDK uses the BoilingData Websocket API in the background, meaning that events can arrive at any time. We use a range of global and query-specific callbacks to allow you to hook into the events that you care about.
 
 All callbacks work in both the global scope and the query scope; i.e. global callbacks will always be executed when a message arrives, query callbacks will only be executed when messages relating to that query arrive.
 
@@ -58,37 +58,45 @@ All callbacks work in both the global scope and the query scope; i.e. global cal
 
 #### Setting Global Callbacks
 
-Global callbacks can be set when creating the BoilingData instance. 
+Global callbacks can be set when creating the BoilingData instance.
+
 ```typescript
-new BoilingData({ 
-  username, password,
+new BoilingData({
+  username,
+  password,
   globalCallbacks: {
-    onRequest: req => { console.log("A new request has been made with ID", req.requestId)},
-    onQueryFinished: req => { console.log("Request complete!", req.requestId)},
-    onLogError: message => { console.error("LogError",message)},
-    onSocketOpen: (socketInstance) => {
-      console.log("The socket has opened!")
+    onRequest: req => {
+      console.log("A new request has been made with ID", req.requestId);
+    },
+    onQueryFinished: req => {
+      console.log("Request complete!", req.requestId);
+    },
+    onLogError: message => {
+      console.error("LogError", message);
+    },
+    onSocketOpen: socketInstance => {
+      console.log("The socket has opened!");
     },
     onLambdaEvent: message => {
-      console.log("Change in status of dataset: ",message)
-    }
-  }
+      console.log("Change in status of dataset: ", message);
+    },
+  },
 });
 ```
 
 #### Setting Query-level Callbacks
 
 Query callbacks are set when creating the query
+
 ```typescript
 bdInstance.execQuery({
   sql: `SELECT COUNT(*) AS count FROM parquet_scan('s3://boilingdata-demo/demo2.parquet');`,
   callbacks: {
     onData: data => {
-      console.log("Some data for this query arrived",data)
+      console.log("Some data for this query arrived", data);
     },
     onQueryFinished: () => resolve(r),
     onLogError: (data: any) => reject(data),
-
   },
 });
 ```
@@ -106,6 +114,16 @@ bdInstance.execQuery(
     "s3://bucket/data/2022-01-03.parquet",
   ])
 ```
+
 Results are streamed as soon as they are ready, so it is unlikely that you will recieve results in the same order that you specified the files.
 
-If you do not need to query multiple files, then you do not need to specify the keys, for instance `SELECT COUNT(*) as rowCount FROM parquet_scan('s3://bucket/data/2022-01-01.parquet');`,
+If you do not need to query multiple files, then you do not need to specify the keys, for instance `SELECT COUNT(*) as rowCount FROM parquet_scan('s3://bucket/data/2022-01-01.parquet');`.
+
+You can also now query Glue (Hive) Tables:
+
+```typescript
+bdInstance.execQuery(
+  sql: `SELECT 's3://KEY' as fileLocation, COUNT(*) as rowCount FROM parquet_scan('s3://KEY');`,
+  keys: [ "glue.default.nyctaxis" ]
+)
+```
