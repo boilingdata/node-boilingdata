@@ -1,5 +1,45 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`BoilingData in all North-America and Europe AWS Regions runs query succesfully in other regions too 1`] = `
+Array [
+  Object {
+    "birthdate": "3/8/1971",
+    "cc": "6759521864920116",
+    "comments": "1E+02",
+    "country": "Indonesia",
+    "email": "ajordan0@com.com",
+    "first_name": "Amanda",
+    "gender": "Female",
+    "id": 1,
+    "ip_address": "1.197.201.2",
+    "last_name": "Jordan",
+    "registration_dttm": 1454486129000,
+    "salary": 49756.53,
+    "title": "Internal Auditor",
+  },
+]
+`;
+
+exports[`BoilingData in all North-America and Europe AWS Regions runs query succesfully in other regions too 2`] = `
+Array [
+  Object {
+    "birthdate": "3/8/1971",
+    "cc": "6759521864920116",
+    "comments": "1E+02",
+    "country": "Indonesia",
+    "email": "ajordan0@com.com",
+    "first_name": "Amanda",
+    "gender": "Female",
+    "id": 1,
+    "ip_address": "1.197.201.2",
+    "last_name": "Jordan",
+    "registration_dttm": 1454486129000,
+    "salary": 49756.53,
+    "title": "Internal Auditor",
+  },
+]
+`;
+
 exports[`boilingdata with DuckDB run all meta queries 1`] = `
 Array [
   Array [],
@@ -40,6 +80,13 @@ Array [
       "Key": "demo2.parquet",
       "LastModified": "2022-04-17T12:13:42.000Z",
       "Size": 777673114,
+      "StorageClass": "STANDARD",
+    },
+    Object {
+      "ETag": "\\"19c7dc463166dd08c931736ad9048a35\\"",
+      "Key": "test.parquet",
+      "LastModified": "2022-05-23T16:37:00.000Z",
+      "Size": 2783,
       "StorageClass": "STANDARD",
     },
     Object {

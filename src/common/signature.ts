@@ -11,9 +11,9 @@ function getSigner(region: string, credentials: any): SignatureV4 {
 export async function getSignedWssUrl(
   host: string,
   credentials: Credentials | Provider<Credentials>,
+  region: string,
   protocol = "wss",
   path = "/dev",
-  region = "eu-west-1",
 ): Promise<string> {
   const request = new HttpRequest({ protocol, headers: { host }, hostname: host, path });
   const fiveMinsS = 5 * 60;
