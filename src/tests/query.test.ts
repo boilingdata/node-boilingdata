@@ -191,15 +191,15 @@ describe("BoilingData in all North-America and Europe AWS Regions", () => {
   const regions: BDAWSRegion[] = [
     "eu-north-1",
     "eu-west-1",
-    // "eu-west-2",
-    // "eu-west-3",
-    // "eu-south-1",
-    // "eu-central-1",
-    // "us-east-1",
-    // "us-east-2",
-    // "us-west-1",
-    // "us-west-2",
-    // "ca-central-1",
+    "eu-west-2",
+    "eu-west-3",
+    "eu-south-1",
+    "eu-central-1",
+    "us-east-1",
+    "us-east-2",
+    "us-west-1",
+    "us-west-2",
+    "ca-central-1",
   ];
   it("runs query succesfully in other regions too", async () => {
     await Promise.all(

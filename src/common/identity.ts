@@ -38,11 +38,29 @@ async function refreshCredsWithToken(idToken: string): Promise<CognitoIdentityCr
 
 function getWsApiDomain(region: string): string {
   switch (region) {
-    case "eu-west-1":
-      return "m9fhs4t5vh.execute-api.eu-west-1.amazonaws.com";
     case "eu-north-1":
       return "ei0k349i7d.execute-api.eu-north-1.amazonaws.com";
+    case "eu-west-2":
+      return "ej8h1tsab5.execute-api.eu-west-2.amazonaws.com";
+    case "eu-west-3":
+      return "qbqvpmm3o4.execute-api.eu-west-3.amazonaws.com";
+    case "eu-south-1":
+      return "dy5annfn83.execute-api.eu-south-1.amazonaws.com";
+    case "eu-central-1":
+      return "qy8elgcxyi.execute-api.eu-central-1.amazonaws.com";
+    case "us-east-1":
+      return "2waxvxnpa3.execute-api.us-east-1.amazonaws.com";
+    case "us-east-2":
+      return "bilcgl1zpf.execute-api.us-east-2.amazonaws.com";
+    case "us-west-1":
+      return "lal0xyf3d2.execute-api.us-west-1.amazonaws.com";
+    case "us-west-2":
+      return "wkz85e6919.execute-api.us-west-2.amazonaws.com";
+    case "ca-central-1":
+      return "vmbg81io85.execute-api.ca-central-1.amazonaws.com";
+    case "eu-west-1":
     default:
+      // eu-west-1
       return "m9fhs4t5vh.execute-api.eu-west-1.amazonaws.com";
   }
 }

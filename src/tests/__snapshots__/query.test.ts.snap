@@ -40,6 +40,186 @@ Array [
 ]
 `;
 
+exports[`BoilingData in all North-America and Europe AWS Regions runs query succesfully in other regions too 3`] = `
+Array [
+  Object {
+    "birthdate": "3/8/1971",
+    "cc": "6759521864920116",
+    "comments": "1E+02",
+    "country": "Indonesia",
+    "email": "ajordan0@com.com",
+    "first_name": "Amanda",
+    "gender": "Female",
+    "id": 1,
+    "ip_address": "1.197.201.2",
+    "last_name": "Jordan",
+    "registration_dttm": 1454486129000,
+    "salary": 49756.53,
+    "title": "Internal Auditor",
+  },
+]
+`;
+
+exports[`BoilingData in all North-America and Europe AWS Regions runs query succesfully in other regions too 4`] = `
+Array [
+  Object {
+    "birthdate": "3/8/1971",
+    "cc": "6759521864920116",
+    "comments": "1E+02",
+    "country": "Indonesia",
+    "email": "ajordan0@com.com",
+    "first_name": "Amanda",
+    "gender": "Female",
+    "id": 1,
+    "ip_address": "1.197.201.2",
+    "last_name": "Jordan",
+    "registration_dttm": 1454486129000,
+    "salary": 49756.53,
+    "title": "Internal Auditor",
+  },
+]
+`;
+
+exports[`BoilingData in all North-America and Europe AWS Regions runs query succesfully in other regions too 5`] = `
+Array [
+  Object {
+    "birthdate": "3/8/1971",
+    "cc": "6759521864920116",
+    "comments": "1E+02",
+    "country": "Indonesia",
+    "email": "ajordan0@com.com",
+    "first_name": "Amanda",
+    "gender": "Female",
+    "id": 1,
+    "ip_address": "1.197.201.2",
+    "last_name": "Jordan",
+    "registration_dttm": 1454486129000,
+    "salary": 49756.53,
+    "title": "Internal Auditor",
+  },
+]
+`;
+
+exports[`BoilingData in all North-America and Europe AWS Regions runs query succesfully in other regions too 6`] = `
+Array [
+  Object {
+    "birthdate": "3/8/1971",
+    "cc": "6759521864920116",
+    "comments": "1E+02",
+    "country": "Indonesia",
+    "email": "ajordan0@com.com",
+    "first_name": "Amanda",
+    "gender": "Female",
+    "id": 1,
+    "ip_address": "1.197.201.2",
+    "last_name": "Jordan",
+    "registration_dttm": 1454486129000,
+    "salary": 49756.53,
+    "title": "Internal Auditor",
+  },
+]
+`;
+
+exports[`BoilingData in all North-America and Europe AWS Regions runs query succesfully in other regions too 7`] = `
+Array [
+  Object {
+    "birthdate": "3/8/1971",
+    "cc": "6759521864920116",
+    "comments": "1E+02",
+    "country": "Indonesia",
+    "email": "ajordan0@com.com",
+    "first_name": "Amanda",
+    "gender": "Female",
+    "id": 1,
+    "ip_address": "1.197.201.2",
+    "last_name": "Jordan",
+    "registration_dttm": 1454486129000,
+    "salary": 49756.53,
+    "title": "Internal Auditor",
+  },
+]
+`;
+
+exports[`BoilingData in all North-America and Europe AWS Regions runs query succesfully in other regions too 8`] = `
+Array [
+  Object {
+    "birthdate": "3/8/1971",
+    "cc": "6759521864920116",
+    "comments": "1E+02",
+    "country": "Indonesia",
+    "email": "ajordan0@com.com",
+    "first_name": "Amanda",
+    "gender": "Female",
+    "id": 1,
+    "ip_address": "1.197.201.2",
+    "last_name": "Jordan",
+    "registration_dttm": 1454486129000,
+    "salary": 49756.53,
+    "title": "Internal Auditor",
+  },
+]
+`;
+
+exports[`BoilingData in all North-America and Europe AWS Regions runs query succesfully in other regions too 9`] = `
+Array [
+  Object {
+    "birthdate": "3/8/1971",
+    "cc": "6759521864920116",
+    "comments": "1E+02",
+    "country": "Indonesia",
+    "email": "ajordan0@com.com",
+    "first_name": "Amanda",
+    "gender": "Female",
+    "id": 1,
+    "ip_address": "1.197.201.2",
+    "last_name": "Jordan",
+    "registration_dttm": 1454486129000,
+    "salary": 49756.53,
+    "title": "Internal Auditor",
+  },
+]
+`;
+
+exports[`BoilingData in all North-America and Europe AWS Regions runs query succesfully in other regions too 10`] = `
+Array [
+  Object {
+    "birthdate": "3/8/1971",
+    "cc": "6759521864920116",
+    "comments": "1E+02",
+    "country": "Indonesia",
+    "email": "ajordan0@com.com",
+    "first_name": "Amanda",
+    "gender": "Female",
+    "id": 1,
+    "ip_address": "1.197.201.2",
+    "last_name": "Jordan",
+    "registration_dttm": 1454486129000,
+    "salary": 49756.53,
+    "title": "Internal Auditor",
+  },
+]
+`;
+
+exports[`BoilingData in all North-America and Europe AWS Regions runs query succesfully in other regions too 11`] = `
+Array [
+  Object {
+    "birthdate": "3/8/1971",
+    "cc": "6759521864920116",
+    "comments": "1E+02",
+    "country": "Indonesia",
+    "email": "ajordan0@com.com",
+    "first_name": "Amanda",
+    "gender": "Female",
+    "id": 1,
+    "ip_address": "1.197.201.2",
+    "last_name": "Jordan",
+    "registration_dttm": 1454486129000,
+    "salary": 49756.53,
+    "title": "Internal Auditor",
+  },
+]
+`;
+
 exports[`boilingdata with DuckDB run all meta queries 1`] = `
 Array [
   Array [],
