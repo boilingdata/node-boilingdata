@@ -4,7 +4,7 @@ import { createLogger } from "bunyan";
 
 jest.setTimeout(30000);
 
-const logLevel = "error";
+const logLevel = "info";
 const logger = createLogger({ name: "TEST", level: logLevel });
 const username = process.env["BD_USERNAME"];
 const password = process.env["BD_PASSWORD"];
@@ -134,6 +134,25 @@ describe("boilingdata with SQLite3", () => {
     });
     expect(rows.sort()).toMatchSnapshot();
   });
+
+  it("run single query, same one, 2nd time", async () => {
+    const rows = await new Promise<any[]>((resolve, reject) => {
+      const r: any[] = [];
+      bdInstance.execQuery({
+        sql: `SELECT * FROM sqlite('s3://boilingdata-demo/uploads/userdata1.sqlite3','userdata1') LIMIT 2;`,
+        engine: EEngineTypes.SQLITE,
+        keys: [],
+        callbacks: {
+          onData: (data: IBDDataResponse | unknown) => {
+            if (isDataResponse(data)) data.data.map(row => r.push(row));
+            resolve(r);
+          },
+          onLogError: (data: any) => reject(data),
+        },
+      });
+    });
+    expect(rows.sort()).toMatchSnapshot();
+  });
 });
 
 describe("boilingdata with Glue Tables", () => {
@@ -201,6 +220,7 @@ describe("BoilingData in all North-America and Europe AWS Regions", () => {
     "us-west-2",
     "ca-central-1",
   ];
+
   it("runs query succesfully in other regions too", async () => {
     await Promise.all(
       regions.map(async region => {
@@ -231,5 +251,57 @@ describe("BoilingData in all North-America and Europe AWS Regions", () => {
         logger.info(`connection closed to region ${region}`);
       }),
     );
+  });
+
+  it("can query cross-region", async () => {
+    const sourceRegion = "eu-west-3";
+    const bdInstance = new BoilingData({ username, password, globalCallbacks, logLevel, region: sourceRegion });
+    await bdInstance.connect();
+    let allKeys = [
+      "s3://boilingdata-demo/test.parquet",
+      "s3://eu-west-2-boilingdata-demo/test.parquet",
+      "s3://eu-west-3-boilingdata-demo/test.parquet",
+      "s3://eu-north-1-boilingdata-demo/test.parquet",
+      "s3://eu-south-1-boilingdata-demo/test.parquet",
+      "s3://eu-central-1-boilingdata-demo/test.parquet",
+      "s3://us-east-1-boilingdata-demo/test.parquet",
+      "s3://us-east-2-boilingdata-demo/test.parquet",
+      "s3://us-west-1-boilingdata-demo/test.parquet",
+      "s3://us-west-2-boilingdata-demo/test.parquet",
+      "s3://ca-central-1-boilingdata-demo/test.parquet",
+    ];
+    const totalCount = allKeys.length;
+    let count = 0;
+    logger.info(`connected to region ${sourceRegion}`);
+    const rows = await new Promise<any[]>((resolve, reject) => {
+      const r: any[] = [];
+      while (true) {
+        const keys = allKeys.splice(0, 5);
+        if (keys.length <= 0) break;
+        console.log(totalCount, keys);
+        bdInstance.execQuery({
+          sql: `SELECT 's3://KEY' AS key, * FROM parquet_scan('s3://KEY') LIMIT 1;`,
+          engine: EEngineTypes.DUCKDB,
+          keys,
+          callbacks: {
+            onData: (data: IBDDataResponse | unknown) => {
+              if (isDataResponse(data)) {
+                data.data.map(row => r.push(row));
+                count = count + 1;
+                console.log("---------------------- ", count, "/", totalCount, data?.data[0].key);
+                if (count >= totalCount) resolve(r);
+              }
+            },
+            onLogError: (data: any) => reject(data),
+          },
+        });
+      }
+    });
+    const sorted = rows.sort((a, b) => a.key.localeCompare(b.key));
+    console.log(sorted);
+    expect(sorted).toMatchSnapshot();
+
+    await bdInstance.close();
+    logger.info(`connection closed to region ${sourceRegion}`);
   });
 });
