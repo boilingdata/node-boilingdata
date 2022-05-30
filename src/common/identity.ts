@@ -49,7 +49,7 @@ export async function getBoilingDataCredentials(
   const credentials = { accessKeyId, secretAccessKey, sessionToken };
   const path = "/dev";
   const protocol = "wss";
-  const webSocketHost = `${region}.api.boilingdata.com`
+  const webSocketHost = `${region}.api.boilingdata.com`;
   const signedWebsocketUrl = await getSignedWssUrl(webSocketHost, credentials, protocol, path, region);
   const cognitoUsername = idToken.decodePayload()["cognito:username"];
   return { cognitoUsername, signedWebsocketUrl };
