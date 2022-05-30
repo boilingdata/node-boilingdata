@@ -6,7 +6,6 @@ import { getSignedWssUrl } from "./signature";
 const region = "eu-west-1";
 const UserPoolId = "eu-west-1_0GLV9KO1p";
 const IdentityPoolId = "eu-west-1:bce21571-e3a6-47a4-8032-fd015213405f";
-const webSocketHost = "m9fhs4t5vh.execute-api.eu-west-1.amazonaws.com";
 const Logins = `cognito-idp.${region}.amazonaws.com/${UserPoolId}`;
 const poolData = { UserPoolId, ClientId: "6timr8knllr4frovfvq8r2o6oo" };
 const Pool = new CognitoUserPool(poolData);
@@ -50,6 +49,7 @@ export async function getBoilingDataCredentials(
   const credentials = { accessKeyId, secretAccessKey, sessionToken };
   const path = "/dev";
   const protocol = "wss";
+  const webSocketHost = `${region}.api.boilingdata.com`
   const signedWebsocketUrl = await getSignedWssUrl(webSocketHost, credentials, protocol, path, region);
   const cognitoUsername = idToken.decodePayload()["cognito:username"];
   return { cognitoUsername, signedWebsocketUrl };
