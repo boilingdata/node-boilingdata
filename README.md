@@ -15,7 +15,7 @@ yarn add @boilingdata/node-boilingdata
 import { BoilingData, isDataResponse } from "@boilingdata/node-boilingdata";
 
 async function main() {
-  const bdInstance = new BoilingData({ username: process.env["BD_USERNAME"], password: process.env["BD_PASSWORD"] });
+  const bdInstance = new BoilingData({ region: "eu-west-1", username: process.env["BD_USERNAME"], password: process.env["BD_PASSWORD"] });
   await bdInstance.connect();
   const rows = await new Promise<any[]>((resolve, reject) => {
     let r: any[] = [];
@@ -37,6 +37,9 @@ async function main() {
 ```
 
 This repository contains JS/TS BoilingData SDK. Please see the integration tests on `tests/query.test.ts` for for more examples.
+
+### Region
+BoilingData is globally distributed and can work with S3 data in any region. The region specified when creating the `BoilingData` instance dictates where data processing occurs - this should be the same as the region where your data is housed to ensure there is low latency and you are not charged unnecessary data egress fees by Amazon. If you need to query datasets in buckets across multiple regions, you should create multiple `BoilingData` instances.
 
 ### Callbacks
 
@@ -62,6 +65,7 @@ Global callbacks can be set when creating the BoilingData instance.
 
 ```typescript
 new BoilingData({
+  region: "eu-west-1", 
   username,
   password,
   globalCallbacks: {
