@@ -36,7 +36,11 @@ async function refreshCredsWithToken(idToken: string): Promise<CognitoIdentityCr
   return creds;
 }
 
-export async function getBoilingDataCredentials(username: string, password: string, region: string): Promise<BDCredentials> {
+export async function getBoilingDataCredentials(
+  username: string,
+  password: string,
+  region: string,
+): Promise<BDCredentials> {
   const idToken = await getIdToken(username, password);
   const creds = await refreshCredsWithToken(idToken.getJwtToken());
   const accessKeyId = creds.data?.Credentials?.AccessKeyId;
@@ -44,7 +48,8 @@ export async function getBoilingDataCredentials(username: string, password: stri
   const sessionToken = creds.data?.Credentials?.SessionToken;
   if (!accessKeyId || !secretAccessKey) throw new Error("Missing credentials (after refresh)!");
   const credentials = { accessKeyId, secretAccessKey, sessionToken };
-  const signedWebsocketUrl = await getSignedWssUrl(webSocketHost, credentials, "/dev", region);
+  const path = "/dev";
+  const signedWebsocketUrl = await getSignedWssUrl(webSocketHost, credentials, path, region);
   const cognitoUsername = idToken.decodePayload()["cognito:username"];
   return { cognitoUsername, signedWebsocketUrl };
 }
