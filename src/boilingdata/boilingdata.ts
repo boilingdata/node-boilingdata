@@ -22,6 +22,7 @@ export interface IBDCallbacks {
 export interface IBoilingData {
   username: string;
   password: string;
+  region: string;
   logLevel?: "trace" | "debug" | "info" | "warn" | "error" | "fatal"; // Match with Bunyan
   globalCallbacks?: IBDCallbacks;
 }
@@ -103,7 +104,8 @@ export class BoilingData {
     return new Promise((resolve, reject) => {
       const sock = this.socketInstance;
       const cbs = this.props.globalCallbacks;
-      getBoilingDataCredentials(this.props.username, this.props.password).then(creds => {
+      const region = this.props.region ?? "eu-west-1";
+      getBoilingDataCredentials(this.props.username, this.props.password, region).then(creds => {
         this.creds = creds;
         this.logger.debug(this.creds);
         sock.socket = new WebSocket(this.creds.signedWebsocketUrl);
