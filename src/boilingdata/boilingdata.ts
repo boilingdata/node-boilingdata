@@ -22,7 +22,7 @@ export interface IBDCallbacks {
 export interface IBoilingData {
   username: string;
   password: string;
-  region: string;
+  region?: string;
   logLevel?: "trace" | "debug" | "info" | "warn" | "error" | "fatal"; // Match with Bunyan
   globalCallbacks?: IBDCallbacks;
 }
