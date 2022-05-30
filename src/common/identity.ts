@@ -49,7 +49,8 @@ export async function getBoilingDataCredentials(
   if (!accessKeyId || !secretAccessKey) throw new Error("Missing credentials (after refresh)!");
   const credentials = { accessKeyId, secretAccessKey, sessionToken };
   const path = "/dev";
-  const signedWebsocketUrl = await getSignedWssUrl(webSocketHost, credentials, path, region);
+  const protocol = "wss";
+  const signedWebsocketUrl = await getSignedWssUrl(webSocketHost, credentials, protocol, path, region);
   const cognitoUsername = idToken.decodePayload()["cognito:username"];
   return { cognitoUsername, signedWebsocketUrl };
 }
