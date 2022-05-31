@@ -19,11 +19,25 @@ export interface IBDCallbacks {
   onSocketClose?: () => void;
 }
 
+export type BDAWSRegion =
+  | "eu-west-1"
+  | "eu-west-2"
+  | "eu-west-3"
+  | "eu-north-1"
+  | "eu-south-1"
+  | "eu-central-1"
+  | "us-east-1"
+  | "us-east-2"
+  | "us-west-1"
+  | "us-west-2"
+  | "ca-central-1";
+
 export interface IBoilingData {
   username: string;
   password: string;
   logLevel?: "trace" | "debug" | "info" | "warn" | "error" | "fatal"; // Match with Bunyan
   globalCallbacks?: IBDCallbacks;
+  region?: BDAWSRegion;
 }
 
 export interface IBDQuery {
@@ -74,11 +88,13 @@ export function isDataResponse(data: IBDDataResponse | unknown): data is IBDData
 
 export class BoilingData {
   private statusTimer?: NodeJS.Timeout;
+  private region: BDAWSRegion;
   private creds?: BDCredentials;
   private socketInstance: ISocketInstance;
   private logger = createLogger({ name: "boilingdata", level: this.props.logLevel ?? "info" });
 
   constructor(public props: IBoilingData) {
+    this.region = this.props.region ? this.props.region : "eu-west-1";
     this.socketInstance = {
       queries: new Map(), // no queries yet
       queryCallbacks: new Map(), // no queries yet, so no query specific callbacks either
@@ -103,9 +119,8 @@ export class BoilingData {
     return new Promise((resolve, reject) => {
       const sock = this.socketInstance;
       const cbs = this.props.globalCallbacks;
-      getBoilingDataCredentials(this.props.username, this.props.password).then(creds => {
+      getBoilingDataCredentials(this.props.username, this.props.password, this.region).then(creds => {
         this.creds = creds;
-        this.logger.debug(this.creds);
         sock.socket = new WebSocket(this.creds.signedWebsocketUrl);
         sock.socket.onclose = () => {
           if (cbs?.onSocketClose) cbs.onSocketClose();

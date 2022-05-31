@@ -25,7 +25,7 @@ export interface IBDDataQuery {
 
 export interface IBDDataResponse {
   messageType: "DATA";
-  data: Array<string>;
+  data: Array<any>;
   requestId: string;
   numOfRecords?: number;
   batchSerial?: number;
