@@ -257,7 +257,7 @@ describe("BoilingData in all North-America and Europe AWS Regions", () => {
     const sourceRegion = "eu-west-3";
     const bdInstance = new BoilingData({ username, password, globalCallbacks, logLevel, region: sourceRegion });
     await bdInstance.connect();
-    let allKeys = [
+    const allKeys = [
       "s3://boilingdata-demo/test.parquet",
       "s3://eu-west-2-boilingdata-demo/test.parquet",
       "s3://eu-west-3-boilingdata-demo/test.parquet",
@@ -275,9 +275,8 @@ describe("BoilingData in all North-America and Europe AWS Regions", () => {
     logger.info(`connected to region ${sourceRegion}`);
     const rows = await new Promise<any[]>((resolve, reject) => {
       const r: any[] = [];
-      while (true) {
+      while (allKeys.length) {
         const keys = allKeys.splice(0, 5);
-        if (keys.length <= 0) break;
         console.log(totalCount, keys);
         bdInstance.execQuery({
           sql: `SELECT 's3://KEY' AS key, * FROM parquet_scan('s3://KEY') LIMIT 1;`,
