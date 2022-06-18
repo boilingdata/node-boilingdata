@@ -1,6 +1,6 @@
 {
   "name": "@boilingdata/node-boilingdata",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "description": "BoilingData client",
   "main": "dist/cjs/index.js",
   "types": "dist/cjs/index.d.ts",
@@ -58,6 +58,8 @@
   },
   "devDependencies": {
     "@aws-sdk/types": "3.55.0",
+    "@swc/core": "^1.2.203",
+    "@swc/jest": "^0.2.21",
     "@types/aws-sdk": "^2.7.0",
     "@types/bunyan": "^1.8.6",
     "@types/jest": "^27.4.1",
@@ -71,11 +73,10 @@
     "eslint-plugin-jest": "^26.1.4",
     "eslint-plugin-prettier": "^4.0.0",
     "husky": "^7.0.4",
-    "jest": "^27.5.1",
+    "jest": "^28.1.1",
     "onchange": "^7.0.2",
     "prettier": "^2.0.5",
     "rimraf": "^3.0.2",
-    "ts-jest": "^27.1.4",
     "typescript": "^4.1.3"
   }
 }

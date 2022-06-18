@@ -423,24 +423,24 @@ Array [
   ],
   Array [
     Object {
-      "ETag": "\\"83cc3a5587b8c0b16873b2485d063da3-93\\"",
+      "ETag": "\\"f5d2e2bda78a61d9ed9a184ccf3beba2-58\\"",
       "Key": "demo.parquet",
-      "LastModified": "2021-12-06T12:35:46.000Z",
-      "Size": 777673114,
+      "LastModified": "2022-06-18T10:14:03.000Z",
+      "Size": 484530996,
       "StorageClass": "STANDARD",
     },
     Object {
-      "ETag": "\\"e10d77e8fe329838bb8984659e5090cb-103\\"",
-      "Key": "demo2.duckdb.zst",
-      "LastModified": "2022-04-17T12:15:24.000Z",
-      "Size": 858335085,
-      "StorageClass": "STANDARD",
-    },
-    Object {
-      "ETag": "\\"83cc3a5587b8c0b16873b2485d063da3-93\\"",
+      "ETag": "\\"f5d2e2bda78a61d9ed9a184ccf3beba2-58\\"",
       "Key": "demo2.parquet",
-      "LastModified": "2022-04-17T12:13:42.000Z",
-      "Size": 777673114,
+      "LastModified": "2022-06-18T10:14:24.000Z",
+      "Size": 484530996,
+      "StorageClass": "STANDARD",
+    },
+    Object {
+      "ETag": "\\"85669ad1c741265a227e6eafc53cac62-43\\"",
+      "Key": "demo4.duckdb.zst",
+      "LastModified": "2022-06-18T10:55:23.000Z",
+      "Size": 359243721,
       "StorageClass": "STANDARD",
     },
     Object {
@@ -471,11 +471,11 @@ Array [
 exports[`boilingdata with DuckDB run multi-key query 1`] = `
 Array [
   Object {
-    "count": 44459136,
+    "count": 28160000,
     "key": "s3://boilingdata-demo/demo.parquet",
   },
   Object {
-    "count": 44459136,
+    "count": 28160000,
     "key": "s3://boilingdata-demo/demo2.parquet",
   },
 ]

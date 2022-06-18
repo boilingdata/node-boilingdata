@@ -66,6 +66,8 @@ interface IEvent {
 
 enum ECallbackNames {
   REQUEST = "onRequest",
+  ERROR = "onLogError",
+  LOG_MESSAGE = "onLogMessage",
   LOG_INFO = "onLogInfo",
   LOG_ERROR = "onLogError",
   LOG_WARN = "onLogWarn",
