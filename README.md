@@ -9,7 +9,9 @@
 yarn add @boilingdata/node-boilingdata
 ```
 
-## Basic Example
+## Basic Examples
+
+`execQueryPromise()` method can be used to await for the results directly.
 
 ```typescript
 import { BoilingData, isDataResponse } from "@boilingdata/node-boilingdata";
@@ -17,11 +19,29 @@ import { BoilingData, isDataResponse } from "@boilingdata/node-boilingdata";
 async function main() {
   const bdInstance = new BoilingData({ username: process.env["BD_USERNAME"], password: process.env["BD_PASSWORD"] });
   await bdInstance.connect();
+  const sql = `SELECT 's3://KEY' AS key, COUNT(*) AS count FROM parquet_scan('s3://KEY');`;
+  const keys = ["s3://boilingdata-demo/demo.parquet", "s3://boilingdata-demo/demo2.parquet"];
+  const rows = await bdInstance.execQueryPromise({ sql, keys });
+  console.log(rows);
+  await bdInstance.close();
+}
+```
+
+`execQuery()` uses callbacks.
+
+```typescript
+import { BoilingData, isDataResponse } from "@boilingdata/node-boilingdata";
+
+async function main() {
+  const bdInstance = new BoilingData({ username: process.env["BD_USERNAME"], password: process.env["BD_PASSWORD"] });
+  await bdInstance.connect();
+  const sql = `SELECT 's3://KEY' AS key, COUNT(*) AS count FROM parquet_scan('s3://KEY');`;
+  const keys = ["s3://boilingdata-demo/demo.parquet", "s3://boilingdata-demo/demo2.parquet"];
   const rows = await new Promise<any[]>((resolve, reject) => {
     let r: any[] = [];
     bdInstance.execQuery({
-      sql: `SELECT 's3://KEY' AS key, COUNT(*) AS count FROM parquet_scan('s3://KEY');`,
-      keys: ["s3://boilingdata-demo/demo.parquet", "s3://boilingdata-demo/demo2.parquet"],
+      sql,
+      keys,
       callbacks: {
         onData: (data: IBDDataResponse | unknown) => {
           if (isDataResponse(data)) data.data.map(row => r.push(row));

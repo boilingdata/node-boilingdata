@@ -155,6 +155,25 @@ describe("boilingdata with SQLite3", () => {
   });
 });
 
+describe("boilingdata with promise method", () => {
+  beforeAll(async () => {
+    bdInstance = new BoilingData({ username, password, globalCallbacks, logLevel });
+    await bdInstance.connect();
+    logger.info("connected.");
+  });
+
+  afterAll(async () => {
+    await bdInstance.close();
+    logger.info("connection closed.");
+  });
+
+  it("can run simple promise based query", async () => {
+    const sql = `SELECT * FROM parquet_scan('s3://boilingdata-demo/demo2.parquet:m=0') LIMIT 2;`;
+    const results = await bdInstance.execQueryPromise({ sql });
+    expect(results).toMatchSnapshot();
+  });
+});
+
 describe("boilingdata with Glue Tables", () => {
   beforeAll(async () => {
     bdInstance = new BoilingData({ username, password, globalCallbacks, logLevel });

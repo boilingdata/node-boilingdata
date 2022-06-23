@@ -645,3 +645,48 @@ Array [
   },
 ]
 `;
+
+exports[`boilingdata with promise method can run simple promise based query 1`] = `
+Array [
+  Object {
+    "DOLocationID": 145,
+    "PULocationID": 145,
+    "RatecodeID": 1,
+    "VendorID": 1,
+    "congestion_surcharge": 0,
+    "extra": 0.5,
+    "fare_amount": 3,
+    "improvement_surcharge": 0.3,
+    "mta_tax": 0.5,
+    "passenger_count": 1,
+    "payment_type": 2,
+    "store_and_fwd_flag": "N",
+    "tip_amount": 0,
+    "tolls_amount": 0,
+    "total_amount": 4.3,
+    "tpep_dropoff_datetime": 1556669808000,
+    "tpep_pickup_datetime": 1556669690000,
+    "trip_distance": 0,
+  },
+  Object {
+    "DOLocationID": 145,
+    "PULocationID": 145,
+    "RatecodeID": 1,
+    "VendorID": 1,
+    "congestion_surcharge": 0,
+    "extra": 0.5,
+    "fare_amount": 3,
+    "improvement_surcharge": 0.3,
+    "mta_tax": 0.5,
+    "passenger_count": 1,
+    "payment_type": 2,
+    "store_and_fwd_flag": "N",
+    "tip_amount": 0,
+    "tolls_amount": 0,
+    "total_amount": 4.3,
+    "tpep_dropoff_datetime": 1556671047000,
+    "tpep_pickup_datetime": 1556670954000,
+    "trip_distance": 1.5,
+  },
+]
+`;

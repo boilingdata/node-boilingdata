@@ -67,7 +67,6 @@ interface IEvent {
 enum ECallbackNames {
   REQUEST = "onRequest",
   ERROR = "onLogError",
-  LOG_MESSAGE = "onLogMessage",
   LOG_INFO = "onLogInfo",
   LOG_ERROR = "onLogError",
   LOG_WARN = "onLogWarn",
@@ -143,8 +142,27 @@ export class BoilingData {
     });
   }
 
+  public execQueryPromise(params: IBDQuery): Promise<any[]> {
+    this.logger.info("execQueryPromise:", params);
+    const r: any[] = [];
+    return new Promise((resolve, reject) => {
+      this.execQuery({
+        sql: params.sql,
+        keys: params.keys || [],
+        engine: params.engine ?? EEngineTypes.DUCKDB,
+        callbacks: {
+          onData: (data: IBDDataResponse | unknown) => {
+            if (isDataResponse(data)) data.data.map(row => r.push(row));
+          },
+          onQueryFinished: () => resolve(r),
+          onLogError: (data: any) => reject(data),
+        },
+      });
+    });
+  }
+
   public execQuery(params: IBDQuery): void {
-    this.logger.info("runQuery:", params);
+    this.logger.info("execQuery:", params);
     this.socketInstance.bumpActivity();
     const requestId = uuidv4();
     const payload: IBDDataQuery = {
