@@ -50,7 +50,13 @@ export interface IBDQuery {
 
 export interface ISocketInstance {
   lastActivity: number;
-  queries: Map<string, { recievedBatches: Set<number> }>;
+  queries: Map<
+    string,
+    {
+      receivedBatches: Set<number>;
+      receivedSubBatches: Map<number, Set<number>>;
+    }
+  >;
   send: (payload: IBDDataQuery) => void;
   query: (params: IBDQuery) => void;
   bumpActivity: () => void;
@@ -173,7 +179,8 @@ export class BoilingData {
       requestId,
     };
     this.socketInstance.queries.set(requestId, {
-      recievedBatches: new Set(),
+      receivedBatches: new Set(),
+      receivedSubBatches: new Map(),
     });
     this.socketInstance.queryCallbacks.set(requestId, {
       onData: params.callbacks?.onData,
@@ -203,8 +210,18 @@ export class BoilingData {
     if (!message.requestId || !message.batchSerial || !message.totalBatches || message.batchSerial <= 0) return;
     const queryInfo = this.socketInstance.queries.get(message?.requestId);
     if (!queryInfo) return;
-    queryInfo.recievedBatches.add(message.batchSerial);
-    if (queryInfo.recievedBatches.size < message.totalBatches) return;
+    queryInfo.receivedBatches.add(message.batchSerial);
+    if (message.subBatchSerial && message.totalSubBatches) {
+      if (!queryInfo.receivedSubBatches.has(message.batchSerial)) {
+        queryInfo.receivedSubBatches.set(message.batchSerial, new Set());
+      }
+      const receivedSubBatches = queryInfo.receivedSubBatches.get(message.batchSerial);
+      if (receivedSubBatches) {
+        receivedSubBatches.add(message.subBatchSerial);
+        if (receivedSubBatches.size < message.totalSubBatches) return;
+      }
+    }
+    if (queryInfo.receivedBatches.size < message.totalBatches) return;
     this.execEventCallback({ eventType: EEvent.QUERY_FINISHED, requestId: message.requestId, payload: message });
   }
 
