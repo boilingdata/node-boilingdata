@@ -1,6 +1,6 @@
 {
   "name": "@boilingdata/node-boilingdata",
-  "version": "0.0.19",
+  "version": "0.0.20",
   "description": "BoilingData client",
   "main": "dist/cjs/index.js",
   "types": "dist/cjs/index.d.ts",
