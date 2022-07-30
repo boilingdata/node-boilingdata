@@ -23,7 +23,7 @@ globalCallbacks.onSocketClose = () => {
 };
 let bdInstance: BoilingData; //  = new BoilingData({ username, password, globalCallbacks, logLevel });
 
-describe("boilingdata with DuckDB", () => {
+describe.only("boilingdata with DuckDB", () => {
   beforeAll(async () => {
     bdInstance = new BoilingData({ username, password, globalCallbacks, logLevel });
     await bdInstance.connect();
@@ -41,6 +41,44 @@ describe("boilingdata with DuckDB", () => {
       bdInstance.execQuery({
         sql: `SELECT * FROM parquet_scan('s3://boilingdata-demo/demo2.parquet:m=0') LIMIT 2;`,
         // engine: EEngineTypes.DUCKDB, // DuckDB is the default
+        keys: [],
+        callbacks: {
+          onData: (data: IBDDataResponse | unknown) => {
+            if (isDataResponse(data)) data.data.map(row => r.push(row));
+            resolve(r);
+          },
+          onLogError: (data: any) => reject(data),
+        },
+      });
+    });
+    expect(rows.sort()).toMatchSnapshot();
+  });
+
+  it.only("run single query with scan cursor (offset)", async () => {
+    const rows = await new Promise<any[]>((resolve, reject) => {
+      const r: any[] = [];
+      bdInstance.execQuery({
+        sql: `SELECT * FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test.parquet:m=0') LIMIT 10;`,
+        scanCursor: 3,
+        keys: [],
+        callbacks: {
+          onData: (data: IBDDataResponse | unknown) => {
+            if (isDataResponse(data)) data.data.map(row => r.push(row));
+            resolve(r);
+          },
+          onLogError: (data: any) => reject(data),
+        },
+      });
+    });
+    expect(rows.sort()).toMatchSnapshot();
+  });
+
+  it.only("run single query with scan cursor over the size", async () => {
+    const rows = await new Promise<any[]>((resolve, reject) => {
+      const r: any[] = [];
+      bdInstance.execQuery({
+        sql: `SELECT * FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test.parquet:m=0');`,
+        scanCursor: 10,
         keys: [],
         callbacks: {
           onData: (data: IBDDataResponse | unknown) => {
