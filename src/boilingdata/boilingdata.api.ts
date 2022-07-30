@@ -5,6 +5,7 @@ export interface IBDDataQuery {
   messageType: string; // SQL_QUERY
   requestId: string;
   sql: string;
+  scanCursor?: number; // offset for rows to deliver
   engine?: string; // DUCKDB (default), SQLITE
   keys?: string[];
   crossRegionPolicy?: string; // DISALLOWED, ALLOWED, SELECTED

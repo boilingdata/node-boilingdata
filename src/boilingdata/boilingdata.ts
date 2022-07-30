@@ -42,6 +42,7 @@ export interface IBoilingData {
 
 export interface IBDQuery {
   sql: string;
+  scanCursor?: number; // row number to start deliverying from
   engine?: EEngineTypes.DUCKDB | EEngineTypes.SQLITE;
   keys?: string[];
   requestId?: string;
@@ -154,7 +155,8 @@ export class BoilingData {
     return new Promise((resolve, reject) => {
       this.execQuery({
         sql: params.sql,
-        keys: params.keys || [],
+        keys: params.keys ?? [],
+        scanCursor: params.scanCursor ?? 0,
         engine: params.engine ?? EEngineTypes.DUCKDB,
         callbacks: {
           onData: (data: IBDDataResponse | unknown) => {
@@ -174,7 +176,8 @@ export class BoilingData {
     const payload: IBDDataQuery = {
       messageType: EMessageTypes.SQL_QUERY,
       sql: params.sql,
-      keys: params.keys || [],
+      keys: params.keys ?? [],
+      scanCursor: params.scanCursor ?? 0,
       engine: params.engine ?? EEngineTypes.DUCKDB,
       requestId,
     };
