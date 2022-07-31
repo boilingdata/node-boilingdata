@@ -23,7 +23,7 @@ globalCallbacks.onSocketClose = () => {
 };
 let bdInstance: BoilingData; //  = new BoilingData({ username, password, globalCallbacks, logLevel });
 
-describe.only("boilingdata with DuckDB", () => {
+describe("boilingdata with DuckDB", () => {
   beforeAll(async () => {
     bdInstance = new BoilingData({ username, password, globalCallbacks, logLevel });
     await bdInstance.connect();
@@ -54,7 +54,7 @@ describe.only("boilingdata with DuckDB", () => {
     expect(rows.sort()).toMatchSnapshot();
   });
 
-  it.only("run single query with scan cursor (offset)", async () => {
+  it("run single query with scan cursor (offset)", async () => {
     const rows = await new Promise<any[]>((resolve, reject) => {
       const r: any[] = [];
       bdInstance.execQuery({
@@ -73,7 +73,7 @@ describe.only("boilingdata with DuckDB", () => {
     expect(rows.sort()).toMatchSnapshot();
   });
 
-  it.only("run single query with scan cursor over the size", async () => {
+  it("run single query with scan cursor over the size", async () => {
     const rows = await new Promise<any[]>((resolve, reject) => {
       const r: any[] = [];
       bdInstance.execQuery({
