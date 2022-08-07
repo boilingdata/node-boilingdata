@@ -2,7 +2,7 @@ import { EEngineTypes, globalCallbacksList, IBDDataResponse } from "../boilingda
 import { BDAWSRegion, BoilingData, isDataResponse } from "../boilingdata/boilingdata";
 import { createLogger } from "bunyan";
 
-jest.setTimeout(30000);
+jest.setTimeout(90000);
 
 const logLevel = "info";
 const logger = createLogger({ name: "TEST", level: logLevel });
@@ -359,5 +359,155 @@ describe("BoilingData in all North-America and Europe AWS Regions", () => {
 
     await bdInstance.close();
     logger.info(`connection closed to region ${sourceRegion}`);
+  });
+});
+
+describe("BoilingData with S3 folders", () => {
+  beforeAll(async () => {
+    bdInstance = new BoilingData({ username, password, globalCallbacks, logLevel });
+    await bdInstance.connect();
+    logger.info("connected.");
+  });
+
+  afterAll(async () => {
+    await bdInstance.close();
+    logger.info("connection closed.");
+  });
+
+  it("run single query on S3 folder with 2 copies of the same parquet file", async () => {
+    const rows = await new Promise<any[]>((resolve, reject) => {
+      const r: any[] = [];
+      bdInstance.execQuery({
+        sql: `SELECT * FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test_folder/') a ORDER BY email LIMIT 12;`,
+        callbacks: {
+          onData: (data: IBDDataResponse | unknown) => {
+            if (isDataResponse(data)) data.data.map(row => r.push(row));
+            resolve(r);
+          },
+          onLogError: (data: any) => reject(data),
+        },
+      });
+    });
+    expect(rows.sort()).toMatchSnapshot();
+  });
+
+  it("query over folder with 80 gz.parquet files (no mem caching)", async () => {
+    // s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=12/type=yellow/
+    const rows = await new Promise<any[]>((resolve, reject) => {
+      const r: any[] = [];
+      bdInstance.execQuery({
+        sql: `SELECT COUNT(*) FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test_folder2/:m=0') a;`,
+        callbacks: {
+          onData: (data: IBDDataResponse | unknown) => {
+            if (isDataResponse(data)) data.data.map(row => r.push(row));
+            resolve(r);
+          },
+          onLogError: (data: any) => reject(data),
+        },
+      });
+    });
+    expect(rows.sort()).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "count_star()": 29166808,
+        },
+      ]
+    `);
+  });
+
+  it("query over example file", async () => {
+    // s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=12/type=yellow/
+    const rows = await new Promise<any[]>((resolve, reject) => {
+      const r: any[] = [];
+      bdInstance.execQuery({
+        sql: `SELECT COUNT(*) FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test_folder2/part-r-00426-6e222bd6-47be-424a-a29a-606961a23de1.gz.parquet');`,
+        callbacks: {
+          onData: (data: IBDDataResponse | unknown) => {
+            if (isDataResponse(data)) data.data.map(row => r.push(row));
+            resolve(r);
+          },
+          onLogError: (data: any) => reject(data),
+        },
+      });
+    });
+    expect(rows.sort()).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "count_star()": 365016,
+        },
+      ]
+    `);
+  });
+
+  it("2x query over same example file", async () => {
+    // s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=12/type=yellow/
+    const rows = await new Promise<any[]>((resolve, reject) => {
+      const r: any[] = [];
+      bdInstance.execQuery({
+        sql: `SELECT COUNT(*) FROM ( SELECT * FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test_folder2/part-r-00426-6e222bd6-47be-424a-a29a-606961a23de1.gz.parquet') a UNION ALL SELECT * FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test_folder2/part-r-00426-6e222bd6-47be-424a-a29a-606961a23de1.gz.parquet') b ) x;`,
+        callbacks: {
+          onData: (data: IBDDataResponse | unknown) => {
+            if (isDataResponse(data)) data.data.map(row => r.push(row));
+            resolve(r);
+          },
+          onLogError: (data: any) => reject(data),
+        },
+      });
+    });
+    expect(rows.sort()).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "count_star()": 730032,
+        },
+      ]
+    `);
+  });
+
+  it("2x query over folder with 80 gz.parquet files (mem caching)", async () => {
+    // s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=12/type=yellow/
+    const rows = await new Promise<any[]>((resolve, reject) => {
+      const r: any[] = [];
+      bdInstance.execQuery({
+        sql: `SELECT COUNT(*) FROM ( SELECT * FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test_folder2/') x UNION ALL SELECT * FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test_folder2/') y ) a;`,
+        callbacks: {
+          onData: (data: IBDDataResponse | unknown) => {
+            if (isDataResponse(data)) data.data.map(row => r.push(row));
+            resolve(r);
+          },
+          onLogError: (data: any) => reject(data),
+        },
+      });
+    });
+    expect(rows.sort()).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "count_star()": 58333616,
+        },
+      ]
+    `);
+  });
+
+  it("query over folder with 80 gz.parquet files (mem cached)", async () => {
+    // s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=12/type=yellow/
+    const rows = await new Promise<any[]>((resolve, reject) => {
+      const r: any[] = [];
+      bdInstance.execQuery({
+        sql: `SELECT COUNT(*) FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test_folder2/') a;`,
+        callbacks: {
+          onData: (data: IBDDataResponse | unknown) => {
+            if (isDataResponse(data)) data.data.map(row => r.push(row));
+            resolve(r);
+          },
+          onLogError: (data: any) => reject(data),
+        },
+      });
+    });
+    expect(rows.sort()).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "count_star()": 29166808,
+        },
+      ]
+    `);
   });
 });
