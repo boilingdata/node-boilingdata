@@ -40,8 +40,17 @@ export interface IBoilingData {
   region?: BDAWSRegion;
 }
 
+export interface IJsHooks {
+  initFunc?: (sql: string, scanCursor: number) => any; // The return value is stored in "privCtx" and passed to other hooks as param
+  headerFunc?: (privCtx: any, firstRow: any) => [any, any]; // The 1st return param is the "updated privCtx"
+  batchFunc?: (privCtx: any, rows: any[]) => [any, any[]]; // The 1st return param is the "updated privCtx"
+  footerFunc?: (privCtx: any, total: number) => any; // The 1st return param is the "updated privCtx"
+  finalFunc?: (privCtx: any, allRows: any[]) => any[]; // Function for transforming the whole return batch
+}
+
 export interface IBDQuery {
   sql: string;
+  jsHooks?: IJsHooks;
   scanCursor?: number; // row number to start deliverying from
   engine?: EEngineTypes.DUCKDB | EEngineTypes.SQLITE;
   keys?: string[];
@@ -108,6 +117,7 @@ export class BoilingData {
       queryCallbacks: new Map(), // no queries yet, so no query specific callbacks either
       lastActivity: Date.now(),
       send: (payload: IBDDataQuery) => {
+        console.log("PAYLOAD(send):\n", JSON.stringify(payload));
         this.socketInstance.socket?.send(JSON.stringify(payload));
         this.execEventCallback({ eventType: EEvent.REQUEST, requestId: payload.requestId, payload });
       },
@@ -169,13 +179,66 @@ export class BoilingData {
     });
   }
 
+  private validateJsHooks(params: IBDQuery): void {
+    if (!params.jsHooks) return;
+    const initFunc =
+      params.jsHooks?.initFunc !== undefined
+        ? new Function('"use strict"; return ' + params.jsHooks.initFunc.toString())()
+        : undefined;
+    const headerFunc =
+      params.jsHooks?.headerFunc !== undefined
+        ? new Function('"use strict"; return ' + params.jsHooks.headerFunc.toString())()
+        : undefined;
+    const batchFunc =
+      params.jsHooks?.batchFunc !== undefined
+        ? new Function('"use strict"; return ' + params.jsHooks.batchFunc.toString())()
+        : undefined;
+    const footerFunc =
+      params.jsHooks?.footerFunc !== undefined
+        ? new Function('"use strict"; return ' + params.jsHooks.footerFunc.toString())()
+        : undefined;
+    const finalFunc =
+      params.jsHooks?.finalFunc !== undefined
+        ? new Function('"use strict"; return ' + params.jsHooks.finalFunc.toString())()
+        : undefined;
+    try {
+      /*
+      initFunc?: (sql: string, webSocketUrl: string, scanCursor: number) => any; // The return value is stored in "privCtx" and passed to other hooks as param
+      headerFunc?: (privCtx: any, firstRow: any) => [any, any]; // The 1st return param is the "updated privCtx"
+      batchFunc?: (privCtx: any, rows: any[]) => [any, any[]]; // The 1st return param is the "updated privCtx"
+      footerFunc?: (privCtx: any, total: number) => any; // The 1st return param is the "updated privCtx"
+      finalFunc?: (privCtx: any, allRows: any[]) => any; // Function for transforming the whole return batch
+      */
+      const initFuncResp = initFunc ? initFunc("SELECT 42;", "wss://dummy", 0) : {};
+      if (initFuncResp === undefined) throw new Error("initFunc() did not return valid response");
+      const headerFuncResp = headerFunc ? headerFunc({}, { test: 1, foo: "bar" }) : [1, 2];
+      if (headerFuncResp.length != 2) throw new Error("headerFunc() did not return valid response");
+      const batchFuncResp = batchFunc ? batchFunc({}, [{ test: 2, foo: "bar2" }]) : [1, 2];
+      if (batchFuncResp.length != 2) throw new Error("batchFunc() did not return valid response");
+      const footerFuncResp = footerFunc ? footerFunc({}, 42) : "";
+      if (footerFuncResp === undefined) throw new Error("footerFunc() did not return valid response");
+      const finalFuncResp = finalFunc ? finalFunc({}, [42, 3, 2, "testing"]) : [];
+      if (!Array.isArray(finalFuncResp)) throw new Error("finalFunc() did not return valid response");
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  }
+
   public execQuery(params: IBDQuery): void {
+    this.validateJsHooks(params);
     this.logger.info("execQuery:", params);
     this.socketInstance.bumpActivity();
     const requestId = uuidv4();
     const payload: IBDDataQuery = {
       messageType: EMessageTypes.SQL_QUERY,
       sql: params.sql,
+      jsHooks: {
+        initFunc: params.jsHooks?.initFunc?.toString(),
+        headerFunc: params.jsHooks?.headerFunc?.toString(),
+        batchFunc: params.jsHooks?.batchFunc?.toString(),
+        footerFunc: params.jsHooks?.footerFunc?.toString(),
+      },
       keys: params.keys ?? [],
       scanCursor: params.scanCursor ?? 0,
       engine: params.engine ?? EEngineTypes.DUCKDB,
@@ -196,6 +259,7 @@ export class BoilingData {
       onLambdaEvent: params.callbacks?.onLambdaEvent,
       onQueryFinished: params.callbacks?.onQueryFinished,
     });
+    console.log("PAYLOAD:\n", payload);
     this.socketInstance.send(payload);
   }
 
