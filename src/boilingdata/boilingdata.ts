@@ -41,11 +41,11 @@ export interface IBoilingData {
 }
 
 export interface IJsHooks {
-  initFunc?: (sql: string, scanCursor: number) => any; // The return value is stored in "privCtx" and passed to other hooks as param
+  initFunc?: (sql: string, scanCursor: number) => any;      // The return value is stored in "privCtx" and passed to other hooks as param
   headerFunc?: (privCtx: any, firstRow: any) => [any, any]; // The 1st return param is the "updated privCtx"
-  batchFunc?: (privCtx: any, rows: any[]) => [any, any[]]; // The 1st return param is the "updated privCtx"
-  footerFunc?: (privCtx: any, total: number) => any; // The 1st return param is the "updated privCtx"
-  finalFunc?: (privCtx: any, allRows: any[]) => any[]; // Function for transforming the whole return batch
+  batchFunc?: (privCtx: any, rows: any[]) => [any, any[]];  // The 1st return param is the "updated privCtx"
+  footerFunc?: (privCtx: any, total: number) => any;        // The 1st return param is the "updated privCtx"
+  finalFunc?: (privCtx: any, allRows: any[]) => any[];      // Function for transforming the whole return batch
 }
 
 export interface IBDQuery {
