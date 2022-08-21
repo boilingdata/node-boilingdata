@@ -6,11 +6,11 @@ export interface IBDDataQuery {
   requestId: string;
   sql: string;
   jsHooks?: {
-    initFunc?: string; // (sql: string, webSocketUrl: string, scanCursor: number) => any; // The return value is stored in "privCtx" and passed to other hooks as param
-    headerFunc?: string; // (privCtx: any, firstRow: any) => [any, any];                  // The 1st return param is the "updated privCtx"
-    batchFunc?: string; // (privCtx: any, rows: any[]) => [any, any[]];                   // The 1st return param is the "updated privCtx"
-    footerFunc?: string; // (privCtx: any, total: number) => any;                         // The 1st return param is the "updated privCtx"
-    finalFunc?: string; // (privCtx: any, allRows: any[]) => any[];                       // Function for transforming the whole return batch
+    initFunc?: string; // (sql: string, scanCursor: number) => any;       // The return value is stored in "privCtx" and passed to other hooks as param
+    headerFunc?: string; // (privCtx: any, firstRow: any) => [any, any];  // The 1st return param is the "updated privCtx"
+    batchFunc?: string; // (privCtx: any, rows: any[]) => [any, any[]];   // The 1st return param is the "updated privCtx"
+    footerFunc?: string; // (privCtx: any, total: number) => any;         // The 1st return param is the "updated privCtx"
+    finalFunc?: string; // (privCtx: any, allRows: any[]) => any[];       // Function for transforming the whole return batch
   };
   scanCursor?: number; // offset for rows to deliver
   engine?: string; // DUCKDB (default), SQLITE
