@@ -526,7 +526,7 @@ describe("BoilingData JS query hooks", () => {
 
   it("transforms query results to (naive) CSV", async () => {
     const jsHooks: IJsHooks = {
-      initFunc: (sql: string, scanCursor: number) => "",
+      initFunc: (_sql: string, _scanCursor: number) => "",
       headerFunc: (c: any, first: any) => [c, Object.keys(first).join(",")],
       batchFunc: (c: any, rows: any[]) => [c, rows.map(r => Object.values(r).join(","))],
       footerFunc: (c: any, total: number) => `total rows: ${total}`,
@@ -560,7 +560,7 @@ describe("BoilingData JS query hooks", () => {
 
   it("transforms query results to simple HTML Table", async () => {
     const jsHooks: IJsHooks = {
-      initFunc: (sql: string, scanCursor: number) => "",
+      initFunc: (_sql: string, _scanCursor: number) => "",
       headerFunc: (c: any, first: any) => [
         c,
         "<table><tr><th>".concat(Object.keys(first).join("</th><th>")).concat("</th></tr>"),
