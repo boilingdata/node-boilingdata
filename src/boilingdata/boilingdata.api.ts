@@ -5,6 +5,8 @@ export interface IBDDataQuery {
   messageType: string; // SQL_QUERY
   requestId: string;
   sql: string;
+  splitAccess?: boolean;
+  splitSizeMB?: number;
   jsHooks?: {
     initFunc?: string; // (sql: string, scanCursor: number) => any;       // The return value is stored in "privCtx" and passed to other hooks as param
     headerFunc?: string; // (privCtx: any, firstRow: any) => [any, any];  // The 1st return param is the "updated privCtx"
@@ -38,6 +40,8 @@ export interface IBDDataResponse {
   numOfRecords?: number;
   batchSerial?: number;
   totalBatches?: number;
+  splitSerial: number;
+  totalSplitSerials: number;
   subBatchSerial?: number;
   totalSubBatches?: number;
 }

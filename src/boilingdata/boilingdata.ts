@@ -38,6 +38,7 @@ export interface IBoilingData {
   logLevel?: "trace" | "debug" | "info" | "warn" | "error" | "fatal"; // Match with Bunyan
   globalCallbacks?: IBDCallbacks;
   region?: BDAWSRegion;
+  autoStatus?: boolean;
 }
 
 export interface IJsHooks {
@@ -54,6 +55,8 @@ export interface IBDQuery {
   scanCursor?: number; // row number to start deliverying from
   engine?: EEngineTypes.DUCKDB | EEngineTypes.SQLITE;
   keys?: string[];
+  splitAccess?: boolean;
+  splitSizeMB?: number;
   requestId?: string;
   callbacks?: IBDCallbacks;
 }
@@ -64,6 +67,7 @@ export interface ISocketInstance {
     string,
     {
       receivedBatches: Set<number>;
+      receivedSplitBatches: Map<number, Set<number>>;
       receivedSubBatches: Map<number, Set<number>>;
     }
   >;
@@ -104,6 +108,7 @@ export function isDataResponse(data: IBDDataResponse | unknown): data is IBDData
 }
 
 export class BoilingData {
+  private autoStatus = true;
   private statusTimer?: NodeJS.Timeout;
   private region: BDAWSRegion;
   private creds?: BDCredentials;
@@ -111,6 +116,7 @@ export class BoilingData {
   private logger = createLogger({ name: "boilingdata", level: this.props.logLevel ?? "info" });
 
   constructor(public props: IBoilingData) {
+    this.autoStatus = props.autoStatus !== undefined ? props.autoStatus === true : true;
     this.region = this.props.region ? this.props.region : "eu-west-1";
     this.socketInstance = {
       queries: new Map(), // no queries yet
@@ -159,20 +165,30 @@ export class BoilingData {
     });
   }
 
+  // FIXME: the ordering of e.g. subBatches is not guaranteed
   public execQueryPromise(params: IBDQuery): Promise<any[]> {
     this.logger.info("execQueryPromise:", params);
     const r: any[] = [];
     return new Promise((resolve, reject) => {
       this.execQuery({
+        ...params,
         sql: params.sql,
         keys: params.keys ?? [],
         scanCursor: params.scanCursor ?? 0,
         engine: params.engine ?? EEngineTypes.DUCKDB,
         callbacks: {
           onData: (data: IBDDataResponse | unknown) => {
-            if (isDataResponse(data)) data.data.map(row => r.push(row));
+            if (isDataResponse(data))
+              data.data.map((row, rowNum) => r.push([data.batchSerial, data.subBatchSerial, rowNum, row]));
           },
-          onQueryFinished: () => resolve(r),
+          onQueryFinished: () =>
+            resolve(
+              r
+                .sort((a, b) => {
+                  return a[0] == b[0] ? (a[1] == b[1] ? a[2] - b[2] : a[1] - b[1]) : a[0] - b[0];
+                })
+                .map(r => r[3]),
+            ),
           onLogError: (data: any) => reject(data),
         },
       });
@@ -231,6 +247,8 @@ export class BoilingData {
     this.socketInstance.bumpActivity();
     const requestId = uuidv4();
     const payload: IBDDataQuery = {
+      splitAccess: params.splitAccess !== undefined ? params.splitAccess == true : false, // TODO: set true by default
+      splitSizeMB: params.splitSizeMB !== undefined ? params.splitSizeMB : 500,
       messageType: EMessageTypes.SQL_QUERY,
       sql: params.sql,
       jsHooks: {
@@ -246,6 +264,7 @@ export class BoilingData {
     };
     this.socketInstance.queries.set(requestId, {
       receivedBatches: new Set(),
+      receivedSplitBatches: new Map(),
       receivedSubBatches: new Map(),
     });
     this.socketInstance.queryCallbacks.set(requestId, {
@@ -264,6 +283,7 @@ export class BoilingData {
   }
 
   private getStatus(): void {
+    if (this.autoStatus !== undefined && this.autoStatus === false) return;
     // Once a minute fetch full status if fetched status is older than 5 mins
     const { lastActivity } = this.socketInstance;
     const fiveMinsMs = 5 * 60 * 1000;
@@ -278,11 +298,25 @@ export class BoilingData {
     const queryInfo = this.socketInstance.queries.get(message?.requestId);
     if (!queryInfo) return;
     queryInfo.receivedBatches.add(message.batchSerial);
-    if (message.subBatchSerial && message.totalSubBatches) {
-      if (!queryInfo.receivedSubBatches.has(message.batchSerial)) {
-        queryInfo.receivedSubBatches.set(message.batchSerial, new Set());
+    // split bath check (optional, parent is batchSerial)
+    if (message.splitSerial && message.totalSplitSerials) {
+      if (!queryInfo.receivedSplitBatches.has(message.batchSerial)) {
+        queryInfo.receivedSplitBatches.set(message.batchSerial, new Set());
       }
-      const receivedSubBatches = queryInfo.receivedSubBatches.get(message.batchSerial);
+      const receivedSplitSerials = queryInfo.receivedSplitBatches.get(message.batchSerial);
+      if (receivedSplitSerials) {
+        receivedSplitSerials.add(message.splitSerial);
+        if (receivedSplitSerials.size < message.totalSplitSerials) return;
+      }
+    }
+    // sub batch check (optional, parent is splitSerial if exists, otherwise batchSerial)
+    const parentBatchSerial =
+      message.splitSerial && message.totalSplitSerials ? message.splitSerial : message.batchSerial;
+    if (message.subBatchSerial && message.totalSubBatches) {
+      if (!queryInfo.receivedSubBatches.has(parentBatchSerial)) {
+        queryInfo.receivedSubBatches.set(parentBatchSerial, new Set());
+      }
+      const receivedSubBatches = queryInfo.receivedSubBatches.get(parentBatchSerial);
       if (receivedSubBatches) {
         receivedSubBatches.add(message.subBatchSerial);
         if (receivedSubBatches.size < message.totalSubBatches) return;

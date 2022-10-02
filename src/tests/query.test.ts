@@ -2,7 +2,7 @@ import { EEngineTypes, globalCallbacksList, IBDDataResponse } from "../boilingda
 import { BDAWSRegion, BoilingData, IJsHooks, isDataResponse } from "../boilingdata/boilingdata";
 import { createLogger } from "bunyan";
 
-jest.setTimeout(90000);
+jest.setTimeout(60000);
 
 const logLevel = "info";
 const logger = createLogger({ name: "TEST", level: logLevel });
@@ -25,7 +25,13 @@ let bdInstance: BoilingData; //  = new BoilingData({ username, password, globalC
 
 describe("boilingdata with DuckDB", () => {
   beforeAll(async () => {
-    bdInstance = new BoilingData({ username, password, globalCallbacks, logLevel });
+    bdInstance = new BoilingData({
+      username,
+      password,
+      globalCallbacks,
+      logLevel,
+      autoStatus: false,
+    });
     await bdInstance.connect();
     logger.info("connected.");
   });
@@ -36,79 +42,35 @@ describe("boilingdata with DuckDB", () => {
   });
 
   it("run single query", async () => {
-    const rows = await new Promise<any[]>((resolve, reject) => {
-      const r: any[] = [];
-      bdInstance.execQuery({
-        sql: `SELECT * FROM parquet_scan('s3://boilingdata-demo/demo2.parquet:m=0') LIMIT 2;`,
-        // engine: EEngineTypes.DUCKDB, // DuckDB is the default
-        keys: [],
-        callbacks: {
-          onData: (data: IBDDataResponse | unknown) => {
-            if (isDataResponse(data)) data.data.map(row => r.push(row));
-            resolve(r);
-          },
-          onLogError: (data: any) => reject(data),
-        },
-      });
-    });
+    const sql = `SELECT * FROM parquet_scan('s3://boilingdata-demo/demo2.parquet') LIMIT 2;`;
+    const rows = await bdInstance.execQueryPromise({ sql });
+    expect(rows.sort()).toMatchSnapshot();
+  });
+
+  it("run single query (2nd time with cacheHit)", async () => {
+    const sql = `SELECT * FROM parquet_scan('s3://boilingdata-demo/demo2.parquet') LIMIT 2;`;
+    const rows = await bdInstance.execQueryPromise({ sql });
     expect(rows.sort()).toMatchSnapshot();
   });
 
   it("run single query with scan cursor (offset)", async () => {
-    const rows = await new Promise<any[]>((resolve, reject) => {
-      const r: any[] = [];
-      bdInstance.execQuery({
-        sql: `SELECT * FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test.parquet:m=0') LIMIT 10;`,
-        scanCursor: 3,
-        keys: [],
-        callbacks: {
-          onData: (data: IBDDataResponse | unknown) => {
-            if (isDataResponse(data)) data.data.map(row => r.push(row));
-            resolve(r);
-          },
-          onLogError: (data: any) => reject(data),
-        },
-      });
-    });
+    const sql = `SELECT * FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test.parquet') LIMIT 10;`;
+    const rows = await bdInstance.execQueryPromise({ sql, scanCursor: 3 });
     expect(rows.sort()).toMatchSnapshot();
   });
 
   it("run single query with scan cursor over the size", async () => {
-    const rows = await new Promise<any[]>((resolve, reject) => {
-      const r: any[] = [];
-      bdInstance.execQuery({
-        sql: `SELECT * FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test.parquet:m=0');`,
-        scanCursor: 10,
-        keys: [],
-        callbacks: {
-          onData: (data: IBDDataResponse | unknown) => {
-            if (isDataResponse(data)) data.data.map(row => r.push(row));
-            resolve(r);
-          },
-          onLogError: (data: any) => reject(data),
-        },
-      });
-    });
+    const sql = `SELECT * FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test.parquet');`;
+    const rows = await bdInstance.execQueryPromise({ sql, scanCursor: 10 });
     expect(rows.sort()).toMatchSnapshot();
   });
 
   it("run multi-key query", async () => {
-    const rows = await new Promise<any[]>((resolve, reject) => {
-      const r: any[] = [];
-      bdInstance.execQuery({
-        sql: `SELECT 's3://KEY' AS key, COUNT(*) AS count FROM parquet_scan('s3://KEY');`,
-        engine: EEngineTypes.DUCKDB,
-        keys: ["s3://boilingdata-demo/demo.parquet", "s3://boilingdata-demo/demo2.parquet"],
-        callbacks: {
-          onData: (data: IBDDataResponse | unknown) => {
-            if (isDataResponse(data)) data.data.map(row => r.push(row));
-          },
-          onQueryFinished: () => resolve(r),
-          onLogError: (data: any) => reject(data),
-        },
-      });
+    const rows = await bdInstance.execQueryPromise({
+      sql: `SELECT 's3://KEY' AS key, COUNT(*) AS count FROM parquet_scan('s3://KEY');`,
+      keys: ["s3://boilingdata-demo/demo.parquet", "s3://boilingdata-demo/demo2.parquet"],
     });
-    expect(rows.sort((a, b) => a.key.localeCompare(b.key))).toMatchSnapshot();
+    expect(rows.sort((a, b) => a.key?.localeCompare(b.key))).toMatchSnapshot();
   });
 
   it("run all meta queries", async () => {
@@ -121,24 +83,84 @@ describe("boilingdata with DuckDB", () => {
     ];
     const rows = await Promise.all(
       metaQueries.map(sql => {
-        return new Promise<any[]>((resolve, reject) => {
-          const r: any[] = [];
-          bdInstance.execQuery({
-            sql,
-            keys: [],
-            engine: EEngineTypes.DUCKDB,
-            callbacks: {
-              onData: (data: IBDDataResponse | unknown) => {
-                if (isDataResponse(data)) data.data.map(row => r.push(row));
-              },
-              onQueryFinished: () => resolve(r),
-              onLogError: (data: any) => reject(data),
-            },
-          });
-        });
+        return bdInstance.execQueryPromise({ sql });
       }),
     );
     expect(rows.sort()).toMatchSnapshot();
+  });
+});
+
+describe("BD can switch the WebSocket connection endpoint dynamically", () => {
+  it("run single query from 2 different regions", async () => {
+    const expected = [
+      {
+        DOLocationID: 145,
+        PULocationID: 145,
+        RatecodeID: 1,
+        VendorID: 1,
+        congestion_surcharge: 0,
+        extra: 0.5,
+        fare_amount: 3,
+        improvement_surcharge: 0.3,
+        mta_tax: 0.5,
+        passenger_count: 1,
+        payment_type: 2,
+        store_and_fwd_flag: "N",
+        tip_amount: 0,
+        tolls_amount: 0,
+        total_amount: 4.3,
+        tpep_dropoff_datetime: 1556669808000,
+        tpep_pickup_datetime: 1556669690000,
+        trip_distance: 0,
+      },
+      {
+        DOLocationID: 145,
+        PULocationID: 145,
+        RatecodeID: 1,
+        VendorID: 1,
+        congestion_surcharge: 0,
+        extra: 0.5,
+        fare_amount: 3,
+        improvement_surcharge: 0.3,
+        mta_tax: 0.5,
+        passenger_count: 1,
+        payment_type: 2,
+        store_and_fwd_flag: "N",
+        tip_amount: 0,
+        tolls_amount: 0,
+        total_amount: 4.3,
+        tpep_dropoff_datetime: 1556671047000,
+        tpep_pickup_datetime: 1556670954000,
+        trip_distance: 1.5,
+      },
+    ];
+    let bd = new BoilingData({
+      username,
+      password,
+      globalCallbacks,
+      logLevel,
+      autoStatus: false,
+      region: "eu-west-1",
+    });
+    await bd.connect();
+    const sql = `SELECT * FROM parquet_scan('s3://boilingdata-demo/demo2.parquet') LIMIT 2;`;
+    let rows = await bd.execQueryPromise({ sql });
+    expect(rows.sort()).toEqual(expected);
+    await bd.close();
+    // New connection from different region, web socket endpoint changes (like ConnectionId too).
+    // But the bucket is still in eu-west-1 and the request is routed there to the same Lambda.
+    bd = new BoilingData({
+      username,
+      password,
+      globalCallbacks,
+      logLevel,
+      autoStatus: false,
+      region: "eu-north-1",
+    });
+    await bd.connect();
+    rows = await bd.execQueryPromise({ sql });
+    expect(rows.sort()).toEqual(expected);
+    await bd.close();
   });
 });
 
@@ -155,39 +177,17 @@ describe("boilingdata with SQLite3", () => {
   });
 
   it("run single query", async () => {
-    const rows = await new Promise<any[]>((resolve, reject) => {
-      const r: any[] = [];
-      bdInstance.execQuery({
-        sql: `SELECT * FROM sqlite('s3://boilingdata-demo/uploads/userdata1.sqlite3','userdata1') LIMIT 2;`,
-        engine: EEngineTypes.SQLITE,
-        keys: [],
-        callbacks: {
-          onData: (data: IBDDataResponse | unknown) => {
-            if (isDataResponse(data)) data.data.map(row => r.push(row));
-            resolve(r);
-          },
-          onLogError: (data: any) => reject(data),
-        },
-      });
+    const rows = await bdInstance.execQueryPromise({
+      sql: `SELECT * FROM sqlite('s3://boilingdata-demo/uploads/userdata1.sqlite3','userdata1') LIMIT 2;`,
+      engine: EEngineTypes.SQLITE,
     });
     expect(rows.sort()).toMatchSnapshot();
   });
 
   it("run single query, same one, 2nd time", async () => {
-    const rows = await new Promise<any[]>((resolve, reject) => {
-      const r: any[] = [];
-      bdInstance.execQuery({
-        sql: `SELECT * FROM sqlite('s3://boilingdata-demo/uploads/userdata1.sqlite3','userdata1') LIMIT 2;`,
-        engine: EEngineTypes.SQLITE,
-        keys: [],
-        callbacks: {
-          onData: (data: IBDDataResponse | unknown) => {
-            if (isDataResponse(data)) data.data.map(row => r.push(row));
-            resolve(r);
-          },
-          onLogError: (data: any) => reject(data),
-        },
-      });
+    const rows = await bdInstance.execQueryPromise({
+      sql: `SELECT * FROM sqlite('s3://boilingdata-demo/uploads/userdata1.sqlite3','userdata1') LIMIT 2;`,
+      engine: EEngineTypes.SQLITE,
     });
     expect(rows.sort()).toMatchSnapshot();
   });
@@ -206,7 +206,7 @@ describe("boilingdata with promise method", () => {
   });
 
   it("can run simple promise based query", async () => {
-    const sql = `SELECT * FROM parquet_scan('s3://boilingdata-demo/demo2.parquet:m=0') LIMIT 2;`;
+    const sql = `SELECT * FROM parquet_scan('s3://boilingdata-demo/demo2.parquet') LIMIT 2;`;
     const results = await bdInstance.execQueryPromise({ sql });
     expect(results).toMatchSnapshot();
   });
@@ -229,7 +229,6 @@ describe("boilingdata with Glue Tables", () => {
       const r: any[] = [];
       bdInstance.execQuery({
         sql: `SELECT 's3://KEY' AS s3key, COUNT(*) AS count FROM parquet_scan('s3://KEY');`,
-        engine: EEngineTypes.DUCKDB,
         keys: ["glue.default.nyctaxis"],
         callbacks: {
           onData: (data: IBDDataResponse | unknown) => {
@@ -248,7 +247,6 @@ describe("boilingdata with Glue Tables", () => {
       const r: any[] = [];
       bdInstance.execQuery({
         sql: `SELECT 's3://KEY' AS s3key, COUNT(*) AS count FROM parquet_scan('s3://KEY') WHERE year=2009 AND month=8;`,
-        engine: EEngineTypes.DUCKDB,
         keys: ["glue.default.nyctaxis"],
         callbacks: {
           onData: (data: IBDDataResponse | unknown) => {
@@ -265,8 +263,8 @@ describe("boilingdata with Glue Tables", () => {
 
 describe("BoilingData in all North-America and Europe AWS Regions", () => {
   const regions: BDAWSRegion[] = [
-    "eu-north-1",
     "eu-west-1",
+    "eu-north-1",
     "eu-west-2",
     "eu-west-3",
     "eu-south-1",
@@ -279,40 +277,39 @@ describe("BoilingData in all North-America and Europe AWS Regions", () => {
   ];
 
   it("runs query succesfully in other regions too", async () => {
+    const rows: any[] = [];
     await Promise.all(
       regions.map(async region => {
-        const bdInstance = new BoilingData({ username, password, globalCallbacks, logLevel, region });
+        const bdInstance = new BoilingData({
+          username,
+          password,
+          globalCallbacks,
+          logLevel,
+          region,
+          autoStatus: false,
+        });
         await bdInstance.connect();
         logger.info(`connected to region ${region}`);
-        const rows = await new Promise<any[]>((resolve, reject) => {
-          const r: any[] = [];
-          const bucket = region == "eu-west-1" ? "boilingdata-demo" : `${region}-boilingdata-demo`;
-          bdInstance.execQuery({
-            sql: `SELECT * FROM parquet_scan('s3://${bucket}/test.parquet:m=0') LIMIT 1;`,
-            engine: EEngineTypes.DUCKDB,
-            keys: [],
-            callbacks: {
-              onData: (data: IBDDataResponse | unknown) => {
-                if (isDataResponse(data)) data.data.map(row => r.push(row));
-                resolve(r);
-              },
-              onLogError: (data: any) => reject(data),
-            },
-          });
-        });
-        const sorted = rows.sort();
-        console.log(sorted);
-        expect(sorted).toMatchSnapshot();
-
+        const bucket = region == "eu-west-1" ? "boilingdata-demo" : `${region}-boilingdata-demo`;
+        const sql = `SELECT * FROM parquet_scan('s3://${bucket}/test.parquet') LIMIT 1;`;
+        rows.push(await bdInstance.execQueryPromise({ sql }));
         await bdInstance.close();
         logger.info(`connection closed to region ${region}`);
       }),
     );
+    const sorted = rows.sort();
+    console.log(sorted);
+    expect(sorted).toMatchSnapshot();
   });
 
   it("can query cross-region", async () => {
-    const sourceRegion = "eu-west-3";
-    const bdInstance = new BoilingData({ username, password, globalCallbacks, logLevel, region: sourceRegion });
+    const bdInstance = new BoilingData({
+      username,
+      password,
+      globalCallbacks,
+      logLevel,
+      autoStatus: false,
+    });
     await bdInstance.connect();
     const allKeys = [
       "s3://boilingdata-demo/test.parquet",
@@ -328,37 +325,20 @@ describe("BoilingData in all North-America and Europe AWS Regions", () => {
       "s3://ca-central-1-boilingdata-demo/test.parquet",
     ];
     const totalCount = allKeys.length;
-    let count = 0;
-    logger.info(`connected to region ${sourceRegion}`);
-    const rows = await new Promise<any[]>((resolve, reject) => {
-      const r: any[] = [];
-      while (allKeys.length) {
-        const keys = allKeys.splice(0, 5);
-        console.log(totalCount, keys);
-        bdInstance.execQuery({
-          sql: `SELECT 's3://KEY' AS key, * FROM parquet_scan('s3://KEY') LIMIT 1;`,
-          engine: EEngineTypes.DUCKDB,
-          keys,
-          callbacks: {
-            onData: (data: IBDDataResponse | unknown) => {
-              if (isDataResponse(data)) {
-                data.data.map(row => r.push(row));
-                count = count + 1;
-                console.log("---------------------- ", count, "/", totalCount, data?.data[0].key);
-                if (count >= totalCount) resolve(r);
-              }
-            },
-            onLogError: (data: any) => reject(data),
-          },
-        });
-      }
-    });
+    const rows: any[] = [];
+    while (allKeys.length) {
+      const keys = allKeys.splice(0, 5);
+      console.log(totalCount, keys);
+      const sql = `SELECT 's3://KEY' AS key, * FROM parquet_scan('s3://KEY') LIMIT 1;`;
+      const newRows = await bdInstance.execQueryPromise({ sql, keys });
+      rows.push(...newRows);
+    }
     const sorted = rows.sort((a, b) => a.key.localeCompare(b.key));
     console.log(sorted);
     expect(sorted).toMatchSnapshot();
 
     await bdInstance.close();
-    logger.info(`connection closed to region ${sourceRegion}`);
+    logger.info(`connection closed`);
   });
 });
 
@@ -375,38 +355,29 @@ describe("BoilingData with S3 folders", () => {
   });
 
   it("run single query on S3 folder with 2 copies of the same parquet file", async () => {
-    const rows = await new Promise<any[]>((resolve, reject) => {
-      const r: any[] = [];
-      bdInstance.execQuery({
-        sql: `SELECT * FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test_folder/') a ORDER BY email LIMIT 12;`,
-        callbacks: {
-          onData: (data: IBDDataResponse | unknown) => {
-            if (isDataResponse(data)) data.data.map(row => r.push(row));
-            resolve(r);
-          },
-          onLogError: (data: any) => reject(data),
+    const sql = `SELECT * FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test_folder/') ORDER BY email LIMIT 12;`;
+    const rows = await bdInstance.execQueryPromise({ sql });
+    expect(rows).toMatchSnapshot();
+  });
+
+  it("query over folder with 80 gz.parquet files (no mem caching, local region)", async () => {
+    // s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=12/type=yellow/
+    const sql = `SELECT COUNT(*) AS totalCount FROM parquet_scan('s3://boilingdata-demo/test_folder2/');`;
+    const rows = await bdInstance.execQueryPromise({ sql });
+    expect(rows).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "totalcount": 29166808,
         },
-      });
-    });
-    expect(rows.sort()).toMatchSnapshot();
+      ]
+    `);
   });
 
   it("query over folder with 80 gz.parquet files (no mem caching)", async () => {
     // s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=12/type=yellow/
-    const rows = await new Promise<any[]>((resolve, reject) => {
-      const r: any[] = [];
-      bdInstance.execQuery({
-        sql: `SELECT COUNT(*) FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test_folder2/:m=0') a;`,
-        callbacks: {
-          onData: (data: IBDDataResponse | unknown) => {
-            if (isDataResponse(data)) data.data.map(row => r.push(row));
-            resolve(r);
-          },
-          onLogError: (data: any) => reject(data),
-        },
-      });
-    });
-    expect(rows.sort()).toMatchInlineSnapshot(`
+    const sql = `SELECT COUNT(*) FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test_folder2/');`;
+    const rows = await bdInstance.execQueryPromise({ sql });
+    expect(rows).toMatchInlineSnapshot(`
       Array [
         Object {
           "count_star()": 29166808,
@@ -417,19 +388,8 @@ describe("BoilingData with S3 folders", () => {
 
   it("query over example file", async () => {
     // s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=12/type=yellow/
-    const rows = await new Promise<any[]>((resolve, reject) => {
-      const r: any[] = [];
-      bdInstance.execQuery({
-        sql: `SELECT COUNT(*) FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test_folder2/part-r-00426-6e222bd6-47be-424a-a29a-606961a23de1.gz.parquet');`,
-        callbacks: {
-          onData: (data: IBDDataResponse | unknown) => {
-            if (isDataResponse(data)) data.data.map(row => r.push(row));
-            resolve(r);
-          },
-          onLogError: (data: any) => reject(data),
-        },
-      });
-    });
+    const sql = `SELECT COUNT(*) FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test_folder2/part-r-00426-6e222bd6-47be-424a-a29a-606961a23de1.gz.parquet');`;
+    const rows = await bdInstance.execQueryPromise({ sql });
     expect(rows.sort()).toMatchInlineSnapshot(`
       Array [
         Object {
@@ -439,21 +399,90 @@ describe("BoilingData with S3 folders", () => {
     `);
   });
 
+  it("query over example file without splitAccess", async () => {
+    const rows = await bdInstance.execQueryPromise({
+      splitAccess: false,
+      splitSizeMB: 300,
+      sql: `SELECT COUNT(*) AS splitAccess FROM parquet_scan('s3://boilingdata-demo/demo2.parquet');`,
+    });
+    expect(rows.sort()).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "splitaccess": 28160000,
+        },
+      ]
+    `);
+  });
+
+  it("query over example file with splitAccess but no actual splitting", async () => {
+    const rows = await bdInstance.execQueryPromise({
+      splitAccess: true,
+      splitSizeMB: 500,
+      sql: `SELECT COUNT(*) AS splitAccess FROM parquet_scan('s3://boilingdata-demo/demo2.parquet');`,
+    });
+    expect(rows.sort()).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "splitaccess": 28160000,
+        },
+      ]
+    `);
+  });
+
+  it("query over example file with explicit splitAccess and splitSize", async () => {
+    const rows = await bdInstance.execQueryPromise({
+      splitAccess: true,
+      splitSizeMB: 300,
+      sql: `SELECT COUNT(*) AS splitAccess FROM parquet_scan('s3://boilingdata-demo/demo2.parquet');`,
+    });
+    // NOTE: If splitting happens, query results need to be combined.
+    //       In this case it would be 14010368 + 14149632 = 28160000 ==> OK
+    console.log(rows);
+    expect(rows.sort((a, b) => a.splitaccess - b.splitaccess)).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "splitaccess": 14010368,
+        },
+        Object {
+          "splitaccess": 14149632,
+        },
+      ]
+    `);
+  });
+
+  it("query over example file with smaller splitSize", async () => {
+    const rows = await bdInstance.execQueryPromise({
+      splitAccess: true,
+      splitSizeMB: 100,
+      sql: `SELECT COUNT(*) AS splitaccess FROM parquet_scan('s3://boilingdata-demo/demo.parquet');`,
+    });
+    // NOTE: If splitting happens, query results need to be combined.
+    //       In this case it would be 5619712 + 5580800 + 5619712 + 5619712 + 5720064 = 28160000 ==> OK.
+    expect(rows.sort((a, b) => a.splitaccess - b.splitaccess)).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "splitaccess": 5580800,
+        },
+        Object {
+          "splitaccess": 5619712,
+        },
+        Object {
+          "splitaccess": 5619712,
+        },
+        Object {
+          "splitaccess": 5619712,
+        },
+        Object {
+          "splitaccess": 5720064,
+        },
+      ]
+    `);
+  });
+
   it("2x query over same example file", async () => {
     // s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=12/type=yellow/
-    const rows = await new Promise<any[]>((resolve, reject) => {
-      const r: any[] = [];
-      bdInstance.execQuery({
-        sql: `SELECT COUNT(*) FROM ( SELECT * FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test_folder2/part-r-00426-6e222bd6-47be-424a-a29a-606961a23de1.gz.parquet') a UNION ALL SELECT * FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test_folder2/part-r-00426-6e222bd6-47be-424a-a29a-606961a23de1.gz.parquet') b ) x;`,
-        callbacks: {
-          onData: (data: IBDDataResponse | unknown) => {
-            if (isDataResponse(data)) data.data.map(row => r.push(row));
-            resolve(r);
-          },
-          onLogError: (data: any) => reject(data),
-        },
-      });
-    });
+    const sql = `SELECT COUNT(*) FROM ( SELECT * FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test_folder2/part-r-00426-6e222bd6-47be-424a-a29a-606961a23de1.gz.parquet') UNION ALL SELECT * FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test_folder2/part-r-00426-6e222bd6-47be-424a-a29a-606961a23de1.gz.parquet')) a;`;
+    const rows = await bdInstance.execQueryPromise({ sql });
     expect(rows.sort()).toMatchInlineSnapshot(`
       Array [
         Object {
@@ -465,19 +494,8 @@ describe("BoilingData with S3 folders", () => {
 
   it("2x query over folder with 80 gz.parquet files (mem caching)", async () => {
     // s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=12/type=yellow/
-    const rows = await new Promise<any[]>((resolve, reject) => {
-      const r: any[] = [];
-      bdInstance.execQuery({
-        sql: `SELECT COUNT(*) FROM ( SELECT * FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test_folder2/') x UNION ALL SELECT * FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test_folder2/') y ) a;`,
-        callbacks: {
-          onData: (data: IBDDataResponse | unknown) => {
-            if (isDataResponse(data)) data.data.map(row => r.push(row));
-            resolve(r);
-          },
-          onLogError: (data: any) => reject(data),
-        },
-      });
-    });
+    const sql = `SELECT COUNT(*) FROM ( SELECT * FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test_folder2/') UNION ALL SELECT * FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test_folder2/')) a;`;
+    const rows = await bdInstance.execQueryPromise({ sql });
     expect(rows.sort()).toMatchInlineSnapshot(`
       Array [
         Object {
@@ -489,19 +507,8 @@ describe("BoilingData with S3 folders", () => {
 
   it("query over folder with 80 gz.parquet files (mem cached)", async () => {
     // s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=12/type=yellow/
-    const rows = await new Promise<any[]>((resolve, reject) => {
-      const r: any[] = [];
-      bdInstance.execQuery({
-        sql: `SELECT COUNT(*) FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test_folder2/') a;`,
-        callbacks: {
-          onData: (data: IBDDataResponse | unknown) => {
-            if (isDataResponse(data)) data.data.map(row => r.push(row));
-            resolve(r);
-          },
-          onLogError: (data: any) => reject(data),
-        },
-      });
-    });
+    const sql = `SELECT COUNT(*) FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test_folder2/');`;
+    const rows = await bdInstance.execQueryPromise({ sql });
     expect(rows.sort()).toMatchInlineSnapshot(`
       Array [
         Object {
@@ -532,21 +539,8 @@ describe("BoilingData JS query hooks", () => {
       footerFunc: (c: any, total: number) => `total rows: ${total}`,
       finalFunc: (c: any, allRows: any[]) => allRows, // identity func
     };
-    const rows = await new Promise<any[]>((resolve, reject) => {
-      const r: any[] = [];
-      bdInstance.execQuery({
-        sql: `SELECT * FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test.parquet:m=0') LIMIT 5;`,
-        jsHooks: jsHooks,
-        keys: [],
-        callbacks: {
-          onData: (data: IBDDataResponse | unknown) => {
-            if (isDataResponse(data)) data.data.map(row => r.push(row));
-            resolve(r);
-          },
-          onLogError: (data: any) => reject(data),
-        },
-      });
-    });
+    const sql = `SELECT * FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test.parquet') LIMIT 5;`;
+    const rows = await bdInstance.execQueryPromise({ sql, jsHooks });
     expect(rows.join("\n")).toMatchInlineSnapshot(`
       "registration_dttm,id,first_name,last_name,email,gender,ip_address,cc,country,birthdate,salary,title,comments
       1454486129000,1,Amanda,Jordan,ajordan0@com.com,Female,1.197.201.2,6759521864920116,Indonesia,3/8/1971,49756.53,Internal Auditor,1E+02
@@ -572,21 +566,8 @@ describe("BoilingData JS query hooks", () => {
       footerFunc: (c: any, total: number) => `</table><br><b>Total rows: ${total}<br>`,
       finalFunc: (c: any, allRows: any[]) => allRows, // identity func
     };
-    const rows = await new Promise<any[]>((resolve, reject) => {
-      const r: any[] = [];
-      bdInstance.execQuery({
-        sql: `SELECT * FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test.parquet:m=0') LIMIT 5;`,
-        jsHooks: jsHooks,
-        keys: [],
-        callbacks: {
-          onData: (data: IBDDataResponse | unknown) => {
-            if (isDataResponse(data)) data.data.map(row => r.push(row));
-            resolve(r);
-          },
-          onLogError: (data: any) => reject(data),
-        },
-      });
-    });
+    const sql = `SELECT * FROM parquet_scan('s3://eu-north-1-boilingdata-demo/test.parquet') LIMIT 5;`;
+    const rows = await bdInstance.execQueryPromise({ sql, jsHooks });
     expect(rows.join("\n")).toMatchInlineSnapshot(`
       "<table><tr><th>registration_dttm</th><th>id</th><th>first_name</th><th>last_name</th><th>email</th><th>gender</th><th>ip_address</th><th>cc</th><th>country</th><th>birthdate</th><th>salary</th><th>title</th><th>comments</th></tr>
       <tr><td>1454486129000</td><td>1</td><td>Amanda</td><td>Jordan</td><td>ajordan0@com.com</td><td>Female</td><td>1.197.201.2</td><td>6759521864920116</td><td>Indonesia</td><td>3/8/1971</td><td>49756.53</td><td>Internal Auditor</td><td>1E+02</td></tr>

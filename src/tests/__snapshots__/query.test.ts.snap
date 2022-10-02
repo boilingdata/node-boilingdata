@@ -183,221 +183,193 @@ Array [
 
 exports[`BoilingData in all North-America and Europe AWS Regions runs query succesfully in other regions too 1`] = `
 Array [
-  Object {
-    "birthdate": "3/8/1971",
-    "cc": "6759521864920116",
-    "comments": "1E+02",
-    "country": "Indonesia",
-    "email": "ajordan0@com.com",
-    "first_name": "Amanda",
-    "gender": "Female",
-    "id": 1,
-    "ip_address": "1.197.201.2",
-    "last_name": "Jordan",
-    "registration_dttm": 1454486129000,
-    "salary": 49756.53,
-    "title": "Internal Auditor",
-  },
-]
-`;
-
-exports[`BoilingData in all North-America and Europe AWS Regions runs query succesfully in other regions too 2`] = `
-Array [
-  Object {
-    "birthdate": "3/8/1971",
-    "cc": "6759521864920116",
-    "comments": "1E+02",
-    "country": "Indonesia",
-    "email": "ajordan0@com.com",
-    "first_name": "Amanda",
-    "gender": "Female",
-    "id": 1,
-    "ip_address": "1.197.201.2",
-    "last_name": "Jordan",
-    "registration_dttm": 1454486129000,
-    "salary": 49756.53,
-    "title": "Internal Auditor",
-  },
-]
-`;
-
-exports[`BoilingData in all North-America and Europe AWS Regions runs query succesfully in other regions too 3`] = `
-Array [
-  Object {
-    "birthdate": "3/8/1971",
-    "cc": "6759521864920116",
-    "comments": "1E+02",
-    "country": "Indonesia",
-    "email": "ajordan0@com.com",
-    "first_name": "Amanda",
-    "gender": "Female",
-    "id": 1,
-    "ip_address": "1.197.201.2",
-    "last_name": "Jordan",
-    "registration_dttm": 1454486129000,
-    "salary": 49756.53,
-    "title": "Internal Auditor",
-  },
-]
-`;
-
-exports[`BoilingData in all North-America and Europe AWS Regions runs query succesfully in other regions too 4`] = `
-Array [
-  Object {
-    "birthdate": "3/8/1971",
-    "cc": "6759521864920116",
-    "comments": "1E+02",
-    "country": "Indonesia",
-    "email": "ajordan0@com.com",
-    "first_name": "Amanda",
-    "gender": "Female",
-    "id": 1,
-    "ip_address": "1.197.201.2",
-    "last_name": "Jordan",
-    "registration_dttm": 1454486129000,
-    "salary": 49756.53,
-    "title": "Internal Auditor",
-  },
-]
-`;
-
-exports[`BoilingData in all North-America and Europe AWS Regions runs query succesfully in other regions too 5`] = `
-Array [
-  Object {
-    "birthdate": "3/8/1971",
-    "cc": "6759521864920116",
-    "comments": "1E+02",
-    "country": "Indonesia",
-    "email": "ajordan0@com.com",
-    "first_name": "Amanda",
-    "gender": "Female",
-    "id": 1,
-    "ip_address": "1.197.201.2",
-    "last_name": "Jordan",
-    "registration_dttm": 1454486129000,
-    "salary": 49756.53,
-    "title": "Internal Auditor",
-  },
-]
-`;
-
-exports[`BoilingData in all North-America and Europe AWS Regions runs query succesfully in other regions too 6`] = `
-Array [
-  Object {
-    "birthdate": "3/8/1971",
-    "cc": "6759521864920116",
-    "comments": "1E+02",
-    "country": "Indonesia",
-    "email": "ajordan0@com.com",
-    "first_name": "Amanda",
-    "gender": "Female",
-    "id": 1,
-    "ip_address": "1.197.201.2",
-    "last_name": "Jordan",
-    "registration_dttm": 1454486129000,
-    "salary": 49756.53,
-    "title": "Internal Auditor",
-  },
-]
-`;
-
-exports[`BoilingData in all North-America and Europe AWS Regions runs query succesfully in other regions too 7`] = `
-Array [
-  Object {
-    "birthdate": "3/8/1971",
-    "cc": "6759521864920116",
-    "comments": "1E+02",
-    "country": "Indonesia",
-    "email": "ajordan0@com.com",
-    "first_name": "Amanda",
-    "gender": "Female",
-    "id": 1,
-    "ip_address": "1.197.201.2",
-    "last_name": "Jordan",
-    "registration_dttm": 1454486129000,
-    "salary": 49756.53,
-    "title": "Internal Auditor",
-  },
-]
-`;
-
-exports[`BoilingData in all North-America and Europe AWS Regions runs query succesfully in other regions too 8`] = `
-Array [
-  Object {
-    "birthdate": "3/8/1971",
-    "cc": "6759521864920116",
-    "comments": "1E+02",
-    "country": "Indonesia",
-    "email": "ajordan0@com.com",
-    "first_name": "Amanda",
-    "gender": "Female",
-    "id": 1,
-    "ip_address": "1.197.201.2",
-    "last_name": "Jordan",
-    "registration_dttm": 1454486129000,
-    "salary": 49756.53,
-    "title": "Internal Auditor",
-  },
-]
-`;
-
-exports[`BoilingData in all North-America and Europe AWS Regions runs query succesfully in other regions too 9`] = `
-Array [
-  Object {
-    "birthdate": "3/8/1971",
-    "cc": "6759521864920116",
-    "comments": "1E+02",
-    "country": "Indonesia",
-    "email": "ajordan0@com.com",
-    "first_name": "Amanda",
-    "gender": "Female",
-    "id": 1,
-    "ip_address": "1.197.201.2",
-    "last_name": "Jordan",
-    "registration_dttm": 1454486129000,
-    "salary": 49756.53,
-    "title": "Internal Auditor",
-  },
-]
-`;
-
-exports[`BoilingData in all North-America and Europe AWS Regions runs query succesfully in other regions too 10`] = `
-Array [
-  Object {
-    "birthdate": "3/8/1971",
-    "cc": "6759521864920116",
-    "comments": "1E+02",
-    "country": "Indonesia",
-    "email": "ajordan0@com.com",
-    "first_name": "Amanda",
-    "gender": "Female",
-    "id": 1,
-    "ip_address": "1.197.201.2",
-    "last_name": "Jordan",
-    "registration_dttm": 1454486129000,
-    "salary": 49756.53,
-    "title": "Internal Auditor",
-  },
-]
-`;
-
-exports[`BoilingData in all North-America and Europe AWS Regions runs query succesfully in other regions too 11`] = `
-Array [
-  Object {
-    "birthdate": "3/8/1971",
-    "cc": "6759521864920116",
-    "comments": "1E+02",
-    "country": "Indonesia",
-    "email": "ajordan0@com.com",
-    "first_name": "Amanda",
-    "gender": "Female",
-    "id": 1,
-    "ip_address": "1.197.201.2",
-    "last_name": "Jordan",
-    "registration_dttm": 1454486129000,
-    "salary": 49756.53,
-    "title": "Internal Auditor",
-  },
+  Array [
+    Object {
+      "birthdate": "3/8/1971",
+      "cc": "6759521864920116",
+      "comments": "1E+02",
+      "country": "Indonesia",
+      "email": "ajordan0@com.com",
+      "first_name": "Amanda",
+      "gender": "Female",
+      "id": 1,
+      "ip_address": "1.197.201.2",
+      "last_name": "Jordan",
+      "registration_dttm": 1454486129000,
+      "salary": 49756.53,
+      "title": "Internal Auditor",
+    },
+  ],
+  Array [
+    Object {
+      "birthdate": "3/8/1971",
+      "cc": "6759521864920116",
+      "comments": "1E+02",
+      "country": "Indonesia",
+      "email": "ajordan0@com.com",
+      "first_name": "Amanda",
+      "gender": "Female",
+      "id": 1,
+      "ip_address": "1.197.201.2",
+      "last_name": "Jordan",
+      "registration_dttm": 1454486129000,
+      "salary": 49756.53,
+      "title": "Internal Auditor",
+    },
+  ],
+  Array [
+    Object {
+      "birthdate": "3/8/1971",
+      "cc": "6759521864920116",
+      "comments": "1E+02",
+      "country": "Indonesia",
+      "email": "ajordan0@com.com",
+      "first_name": "Amanda",
+      "gender": "Female",
+      "id": 1,
+      "ip_address": "1.197.201.2",
+      "last_name": "Jordan",
+      "registration_dttm": 1454486129000,
+      "salary": 49756.53,
+      "title": "Internal Auditor",
+    },
+  ],
+  Array [
+    Object {
+      "birthdate": "3/8/1971",
+      "cc": "6759521864920116",
+      "comments": "1E+02",
+      "country": "Indonesia",
+      "email": "ajordan0@com.com",
+      "first_name": "Amanda",
+      "gender": "Female",
+      "id": 1,
+      "ip_address": "1.197.201.2",
+      "last_name": "Jordan",
+      "registration_dttm": 1454486129000,
+      "salary": 49756.53,
+      "title": "Internal Auditor",
+    },
+  ],
+  Array [
+    Object {
+      "birthdate": "3/8/1971",
+      "cc": "6759521864920116",
+      "comments": "1E+02",
+      "country": "Indonesia",
+      "email": "ajordan0@com.com",
+      "first_name": "Amanda",
+      "gender": "Female",
+      "id": 1,
+      "ip_address": "1.197.201.2",
+      "last_name": "Jordan",
+      "registration_dttm": 1454486129000,
+      "salary": 49756.53,
+      "title": "Internal Auditor",
+    },
+  ],
+  Array [
+    Object {
+      "birthdate": "3/8/1971",
+      "cc": "6759521864920116",
+      "comments": "1E+02",
+      "country": "Indonesia",
+      "email": "ajordan0@com.com",
+      "first_name": "Amanda",
+      "gender": "Female",
+      "id": 1,
+      "ip_address": "1.197.201.2",
+      "last_name": "Jordan",
+      "registration_dttm": 1454486129000,
+      "salary": 49756.53,
+      "title": "Internal Auditor",
+    },
+  ],
+  Array [
+    Object {
+      "birthdate": "3/8/1971",
+      "cc": "6759521864920116",
+      "comments": "1E+02",
+      "country": "Indonesia",
+      "email": "ajordan0@com.com",
+      "first_name": "Amanda",
+      "gender": "Female",
+      "id": 1,
+      "ip_address": "1.197.201.2",
+      "last_name": "Jordan",
+      "registration_dttm": 1454486129000,
+      "salary": 49756.53,
+      "title": "Internal Auditor",
+    },
+  ],
+  Array [
+    Object {
+      "birthdate": "3/8/1971",
+      "cc": "6759521864920116",
+      "comments": "1E+02",
+      "country": "Indonesia",
+      "email": "ajordan0@com.com",
+      "first_name": "Amanda",
+      "gender": "Female",
+      "id": 1,
+      "ip_address": "1.197.201.2",
+      "last_name": "Jordan",
+      "registration_dttm": 1454486129000,
+      "salary": 49756.53,
+      "title": "Internal Auditor",
+    },
+  ],
+  Array [
+    Object {
+      "birthdate": "3/8/1971",
+      "cc": "6759521864920116",
+      "comments": "1E+02",
+      "country": "Indonesia",
+      "email": "ajordan0@com.com",
+      "first_name": "Amanda",
+      "gender": "Female",
+      "id": 1,
+      "ip_address": "1.197.201.2",
+      "last_name": "Jordan",
+      "registration_dttm": 1454486129000,
+      "salary": 49756.53,
+      "title": "Internal Auditor",
+    },
+  ],
+  Array [
+    Object {
+      "birthdate": "3/8/1971",
+      "cc": "6759521864920116",
+      "comments": "1E+02",
+      "country": "Indonesia",
+      "email": "ajordan0@com.com",
+      "first_name": "Amanda",
+      "gender": "Female",
+      "id": 1,
+      "ip_address": "1.197.201.2",
+      "last_name": "Jordan",
+      "registration_dttm": 1454486129000,
+      "salary": 49756.53,
+      "title": "Internal Auditor",
+    },
+  ],
+  Array [
+    Object {
+      "birthdate": "3/8/1971",
+      "cc": "6759521864920116",
+      "comments": "1E+02",
+      "country": "Indonesia",
+      "email": "ajordan0@com.com",
+      "first_name": "Amanda",
+      "gender": "Female",
+      "id": 1,
+      "ip_address": "1.197.201.2",
+      "last_name": "Jordan",
+      "registration_dttm": 1454486129000,
+      "salary": 49756.53,
+      "title": "Internal Auditor",
+    },
+  ],
 ]
 `;
 
@@ -553,6 +525,36 @@ Array [
     "salary": 144972.51,
     "title": "Structural Engineer",
   },
+  Object {
+    "birthdate": "1/28/1997",
+    "cc": "3574254110301671",
+    "comments": "",
+    "country": "Nigeria",
+    "email": "estewart9@opensource.org",
+    "first_name": "Emily",
+    "gender": "Female",
+    "id": 10,
+    "ip_address": "143.28.251.245",
+    "last_name": "Stewart",
+    "registration_dttm": 1454524187000,
+    "salary": 27234.28,
+    "title": "Health Coach IV",
+  },
+  Object {
+    "birthdate": "1/28/1997",
+    "cc": "3574254110301671",
+    "comments": "",
+    "country": "Nigeria",
+    "email": "estewart9@opensource.org",
+    "first_name": "Emily",
+    "gender": "Female",
+    "id": 10,
+    "ip_address": "143.28.251.245",
+    "last_name": "Stewart",
+    "registration_dttm": 1454524187000,
+    "salary": 27234.28,
+    "title": "Health Coach IV",
+  },
 ]
 `;
 
@@ -569,6 +571,8 @@ Array [
     Object {
       "awsAccountId": "589434896614",
       "externalId": "OPL0DcV9pKiQg7/YXxiKQkwOmYQk7wj9FoBS4P7GNI8=",
+      "isS3DemoRole": true,
+      "s3AccessRoleArn": "arn:aws:iam::589434896614:role/big-table-ws-cli-S3AccessUserRole-SS8E1WW1C7UL",
     },
   ],
   Array [
@@ -615,6 +619,13 @@ Array [
     Object {
       "ETag": "",
       "LastModified": "",
+      "Name": "test_folder2",
+      "Size": 0,
+      "StorageClass": "",
+    },
+    Object {
+      "ETag": "",
+      "LastModified": "",
       "Name": "uploads",
       "Size": 0,
       "StorageClass": "",
@@ -632,6 +643,51 @@ Array [
   Object {
     "count": 28160000,
     "key": "s3://boilingdata-demo/demo2.parquet",
+  },
+]
+`;
+
+exports[`boilingdata with DuckDB run single query (2nd time with cacheHit) 1`] = `
+Array [
+  Object {
+    "DOLocationID": 145,
+    "PULocationID": 145,
+    "RatecodeID": 1,
+    "VendorID": 1,
+    "congestion_surcharge": 0,
+    "extra": 0.5,
+    "fare_amount": 3,
+    "improvement_surcharge": 0.3,
+    "mta_tax": 0.5,
+    "passenger_count": 1,
+    "payment_type": 2,
+    "store_and_fwd_flag": "N",
+    "tip_amount": 0,
+    "tolls_amount": 0,
+    "total_amount": 4.3,
+    "tpep_dropoff_datetime": 1556669808000,
+    "tpep_pickup_datetime": 1556669690000,
+    "trip_distance": 0,
+  },
+  Object {
+    "DOLocationID": 145,
+    "PULocationID": 145,
+    "RatecodeID": 1,
+    "VendorID": 1,
+    "congestion_surcharge": 0,
+    "extra": 0.5,
+    "fare_amount": 3,
+    "improvement_surcharge": 0.3,
+    "mta_tax": 0.5,
+    "passenger_count": 1,
+    "payment_type": 2,
+    "store_and_fwd_flag": "N",
+    "tip_amount": 0,
+    "tolls_amount": 0,
+    "total_amount": 4.3,
+    "tpep_dropoff_datetime": 1556671047000,
+    "tpep_pickup_datetime": 1556670954000,
+    "trip_distance": 1.5,
   },
 ]
 `;
