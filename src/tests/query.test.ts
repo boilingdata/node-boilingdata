@@ -270,7 +270,7 @@ describe("BoilingData in all North-America and Europe AWS Regions", () => {
   });
 });
 
-describe.only("BoilingData with S3 folders", () => {
+describe("BoilingData with S3 folders", () => {
   beforeAll(async () => {
     bdInstance = new BoilingData({ username, password, globalCallbacks, logLevel });
     await bdInstance.connect();
