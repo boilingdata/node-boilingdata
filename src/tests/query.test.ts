@@ -23,7 +23,7 @@ globalCallbacks.onSocketClose = () => {
 };
 let bdInstance: BoilingData; //  = new BoilingData({ username, password, globalCallbacks, logLevel });
 
-describe.only("boilingdata with DuckDB", () => {
+describe("boilingdata with DuckDB", () => {
   beforeAll(async () => {
     bdInstance = new BoilingData({ username, password, globalCallbacks, logLevel });
     await bdInstance.connect();
@@ -35,7 +35,7 @@ describe.only("boilingdata with DuckDB", () => {
     logger.info("connection closed.");
   });
 
-  it.only("run single query", async () => {
+  it("run single query", async () => {
     const rows = await bdInstance.execQueryPromise({
       sql: `SELECT * FROM parquet_scan('s3://boilingdata-demo/demo2.parquet') LIMIT 2;`,
       // engine: EEngineTypes.DUCKDB, // DuckDB is the default
@@ -77,7 +77,6 @@ describe.only("boilingdata with DuckDB", () => {
       "SELECT * FROM list('s3://boilingdata-demo/');",
       "SELECT * FROM boilingdata;",
       "SELECT * FROM pragmas;",
-      // "SELECT * FROM status;", // For some reason this does not work.
     ];
     const rows = await Promise.all(
       metaQueries.map(sql => {
@@ -271,7 +270,7 @@ describe("BoilingData in all North-America and Europe AWS Regions", () => {
   });
 });
 
-describe("BoilingData with S3 folders", () => {
+describe.only("BoilingData with S3 folders", () => {
   beforeAll(async () => {
     bdInstance = new BoilingData({ username, password, globalCallbacks, logLevel });
     await bdInstance.connect();
@@ -347,6 +346,21 @@ describe("BoilingData with S3 folders", () => {
     `);
   });
 
+  it("query over example file with splitAccess but no actual splitting", async () => {
+    const rows = await bdInstance.execQueryPromise({
+      splitAccess: true,
+      splitSizeMB: 500,
+      sql: `SELECT COUNT(*) AS splitAccess FROM parquet_scan('s3://boilingdata-demo/demo2.parquet');`,
+    });
+    expect(rows.sort()).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "splitaccess": 28160000,
+        },
+      ]
+    `);
+  });
+
   it("query over example file with explicit splitAccess and splitSize", async () => {
     const rows = await bdInstance.execQueryPromise({
       splitAccess: true,
@@ -355,7 +369,8 @@ describe("BoilingData with S3 folders", () => {
     });
     // NOTE: If splitting happens, query results need to be combined.
     //       In this case it would be 14010368 + 14149632 = 28160000 ==> OK
-    expect(rows.sort()).toMatchInlineSnapshot(`
+    console.log(rows);
+    expect(rows.sort((a, b) => a.splitaccess - b.splitaccess)).toMatchInlineSnapshot(`
       Array [
         Object {
           "splitaccess": 14010368,
@@ -374,8 +389,8 @@ describe("BoilingData with S3 folders", () => {
       sql: `SELECT COUNT(*) AS splitaccess FROM parquet_scan('s3://boilingdata-demo/demo.parquet');`,
     });
     // NOTE: If splitting happens, query results need to be combined.
-    //       In this case it would be 5580800 + 5619712 + 5619712 + 5619712 + 5720064 = 28160000 ==> OK.
-    expect(rows.sort()).toMatchInlineSnapshot(`
+    //       In this case it would be 5619712 + 5580800 + 5619712 + 5619712 + 5720064 = 28160000 ==> OK.
+    expect(rows.sort((a, b) => a.splitaccess - b.splitaccess)).toMatchInlineSnapshot(`
       Array [
         Object {
           "splitaccess": 5580800,
