@@ -150,7 +150,6 @@ export class BoilingData {
           if (cbs?.onSocketClose) cbs.onSocketClose();
         };
         sock.socket.onopen = () => {
-          this.getStatus();
           if (cbs?.onSocketOpen) cbs.onSocketOpen();
           resolve();
         };
@@ -280,15 +279,6 @@ export class BoilingData {
     });
     console.log("PAYLOAD:\n", payload);
     this.socketInstance.send(payload);
-  }
-
-  private getStatus(): void {
-    if (this.autoStatus !== undefined && this.autoStatus === false) return;
-    // Once a minute fetch full status if fetched status is older than 5 mins
-    const { lastActivity } = this.socketInstance;
-    const fiveMinsMs = 5 * 60 * 1000;
-    if (Date.now() - lastActivity < fiveMinsMs) this.execQuery({ sql: "SELECT * FROM status;" });
-    this.statusTimer = setTimeout(() => this.getStatus(), 60000);
   }
 
   private processBatchInfo(message: unknown): void {
