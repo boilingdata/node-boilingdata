@@ -123,7 +123,7 @@ export class BoilingData {
       queryCallbacks: new Map(), // no queries yet, so no query specific callbacks either
       lastActivity: Date.now(),
       send: (payload: IBDDataQuery) => {
-        console.log("PAYLOAD(send):\n", JSON.stringify(payload));
+        this.logger.debug("PAYLOAD(send):\n", JSON.stringify(payload));
         this.socketInstance.socket?.send(JSON.stringify(payload));
         this.execEventCallback({ eventType: EEvent.REQUEST, requestId: payload.requestId, payload });
       },
@@ -277,7 +277,7 @@ export class BoilingData {
       onLambdaEvent: params.callbacks?.onLambdaEvent,
       onQueryFinished: params.callbacks?.onQueryFinished,
     });
-    console.log("PAYLOAD:\n", payload);
+    this.logger.debug("PAYLOAD:\n", payload);
     this.socketInstance.send(payload);
   }
 
