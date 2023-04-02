@@ -38,7 +38,6 @@ export interface IBoilingData {
   logLevel?: "trace" | "debug" | "info" | "warn" | "error" | "fatal"; // Match with Bunyan
   globalCallbacks?: IBDCallbacks;
   region?: BDAWSRegion;
-  autoStatus?: boolean;
 }
 
 export interface IJsHooks {
@@ -108,15 +107,12 @@ export function isDataResponse(data: IBDDataResponse | unknown): data is IBDData
 }
 
 export class BoilingData {
-  private autoStatus = true;
-  private statusTimer?: NodeJS.Timeout;
   private region: BDAWSRegion;
   private creds?: BDCredentials;
   private socketInstance: ISocketInstance;
   private logger = createLogger({ name: "boilingdata", level: this.props.logLevel ?? "info" });
 
   constructor(public props: IBoilingData) {
-    this.autoStatus = props.autoStatus !== undefined ? props.autoStatus === true : true;
     this.region = this.props.region ? this.props.region : "eu-west-1";
     this.socketInstance = {
       queries: new Map(), // no queries yet
@@ -135,7 +131,6 @@ export class BoilingData {
   }
 
   public async close(): Promise<void> {
-    if (this.statusTimer) clearTimeout(this.statusTimer);
     this.socketInstance.socket?.close(1000);
   }
 

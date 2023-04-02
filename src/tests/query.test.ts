@@ -30,7 +30,6 @@ describe("boilingdata with DuckDB", () => {
       password,
       globalCallbacks,
       logLevel,
-      autoStatus: false,
     });
     await bdInstance.connect();
     logger.info("connected.");
@@ -139,7 +138,6 @@ describe("BD can switch the WebSocket connection endpoint dynamically", () => {
       password,
       globalCallbacks,
       logLevel,
-      autoStatus: false,
       region: "eu-west-1",
     });
     await bd.connect();
@@ -154,7 +152,6 @@ describe("BD can switch the WebSocket connection endpoint dynamically", () => {
       password,
       globalCallbacks,
       logLevel,
-      autoStatus: false,
       region: "eu-north-1",
     });
     await bd.connect();
@@ -286,7 +283,6 @@ describe("BoilingData in all North-America and Europe AWS Regions", () => {
           globalCallbacks,
           logLevel,
           region,
-          autoStatus: false,
         });
         await bdInstance.connect();
         logger.info(`connected to region ${region}`);
@@ -308,7 +304,6 @@ describe("BoilingData in all North-America and Europe AWS Regions", () => {
       password,
       globalCallbacks,
       logLevel,
-      autoStatus: false,
     });
     await bdInstance.connect();
     const allKeys = [
