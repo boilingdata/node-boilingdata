@@ -9,13 +9,15 @@ function getSigner(region: string, credentials: any): SignatureV4 {
 }
 
 export async function getSignedWssUrl(
-  host: string,
+  hostAndOptionalPort: string,
   credentials: Credentials | Provider<Credentials>,
   region: string,
   protocol = "wss",
   path = "/dev",
 ): Promise<string> {
-  const request = new HttpRequest({ protocol, headers: { host }, hostname: host, path });
+  const [host, portCandidate] = hostAndOptionalPort.split(":");
+  const port = parseInt(portCandidate ?? "443");
+  const request = new HttpRequest({ protocol, headers: { host }, hostname: host, path, port });
   const fiveMinsS = 5 * 60;
   const signedRequest = await getSigner(region, credentials).presign(request, { expiresIn: fiveMinsS });
   const searchParams = signedRequest.query ? Object.entries(signedRequest.query).map(k => [k[0], `${k[1]}`]) : [];

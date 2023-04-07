@@ -35,8 +35,8 @@ async function refreshCredsWithToken(idToken: string): Promise<CognitoIdentityCr
   return creds;
 }
 
-function getWsApiDomain(region: string): string {
-  return `${region}.api.boilingdata.com`;
+function getWsApiDomain(region: string, endpointUrl?: string): string {
+  return endpointUrl ? endpointUrl : `${region}.api.boilingdata.com`;
   // return `api.boilingdata.com`;
 }
 
@@ -44,8 +44,9 @@ export async function getBoilingDataCredentials(
   username: string,
   password: string,
   region: BDAWSRegion = "eu-west-1",
+  endpointUrl?: string,
 ): Promise<BDCredentials> {
-  const webSocketHost = getWsApiDomain(region);
+  const webSocketHost = getWsApiDomain(region, endpointUrl);
   const idToken = await getIdToken(username, password);
   const creds = await refreshCredsWithToken(idToken.getJwtToken());
   const accessKeyId = creds.data?.Credentials?.AccessKeyId;

@@ -38,6 +38,7 @@ export interface IBoilingData {
   logLevel?: "trace" | "debug" | "info" | "warn" | "error" | "fatal"; // Match with Bunyan
   globalCallbacks?: IBDCallbacks;
   region?: BDAWSRegion;
+  endpointUrl?: string;
 }
 
 export interface IJsHooks {
@@ -138,24 +139,26 @@ export class BoilingData {
     return new Promise((resolve, reject) => {
       const sock = this.socketInstance;
       const cbs = this.props.globalCallbacks;
-      getBoilingDataCredentials(this.props.username, this.props.password, this.region).then(creds => {
-        this.creds = creds;
-        sock.socket = new WebSocket(this.creds.signedWebsocketUrl);
-        sock.socket.onclose = () => {
-          if (cbs?.onSocketClose) cbs.onSocketClose();
-        };
-        sock.socket.onopen = () => {
-          if (cbs?.onSocketOpen) cbs.onSocketOpen();
-          resolve();
-        };
-        sock.socket.onerror = (err: any) => {
-          this.logger.error(err);
-          reject(err);
-        };
-        sock.socket.onmessage = (msg: MessageEvent) => {
-          return this.handleSocketMessage(msg);
-        };
-      });
+      getBoilingDataCredentials(this.props.username, this.props.password, this.region, this.props.endpointUrl).then(
+        creds => {
+          this.creds = creds;
+          sock.socket = new WebSocket(this.creds.signedWebsocketUrl);
+          sock.socket.onclose = () => {
+            if (cbs?.onSocketClose) cbs.onSocketClose();
+          };
+          sock.socket.onopen = () => {
+            if (cbs?.onSocketOpen) cbs.onSocketOpen();
+            resolve();
+          };
+          sock.socket.onerror = (err: any) => {
+            this.logger.error(err);
+            reject(err);
+          };
+          sock.socket.onmessage = (msg: MessageEvent) => {
+            return this.handleSocketMessage(msg);
+          };
+        },
+      );
     });
   }
 
