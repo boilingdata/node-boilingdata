@@ -1,5 +1,6 @@
-import { CognitoIdentity, CognitoIdentityCredentials } from "aws-sdk";
 import { CognitoIdToken, CognitoUserPool, CognitoUser, AuthenticationDetails } from "amazon-cognito-identity-js";
+import { fromCognitoIdentityPool } from "@aws-sdk/credential-provider-cognito-identity";
+import { CognitoIdentityClient } from "@aws-sdk/client-cognito-identity";
 import { getSignedWssUrl } from "./signature";
 import { BDAWSRegion } from "boilingdata/boilingdata";
 
@@ -28,10 +29,18 @@ function getIdToken(Username: string, Password: string): Promise<CognitoIdToken>
   });
 }
 
-async function refreshCredsWithToken(idToken: string): Promise<CognitoIdentityCredentials> {
-  const idParams = { IdentityPoolId, Logins: { [Logins]: idToken } };
-  const creds = new CognitoIdentityCredentials(idParams, { region: IDP_REGION });
-  await creds.getPromise();
+async function refreshCredsWithToken(jwtIdToken: string): Promise<any> {
+  const cognitoidentity = new CognitoIdentityClient({
+    credentials: fromCognitoIdentityPool({
+      client: new CognitoIdentityClient({ region: IDP_REGION }),
+      identityPoolId: IdentityPoolId,
+      logins: {
+        [Logins]: jwtIdToken,
+      },
+    }),
+  });
+  const creds = await cognitoidentity.config.credentials();
+  console.log(creds.expiration);
   return creds;
 }
 
@@ -43,15 +52,13 @@ function getWsApiDomain(region: string, endpointUrl?: string): string {
 export async function getBoilingDataCredentials(
   username: string,
   password: string,
-  region: BDAWSRegion = "eu-west-1",
+  region: BDAWSRegion = IDP_REGION,
   endpointUrl?: string,
 ): Promise<BDCredentials> {
   const webSocketHost = getWsApiDomain(region, endpointUrl);
   const idToken = await getIdToken(username, password);
   const creds = await refreshCredsWithToken(idToken.getJwtToken());
-  const accessKeyId = creds.data?.Credentials?.AccessKeyId;
-  const secretAccessKey = (<CognitoIdentity.Types.GetCredentialsForIdentityResponse>creds.data)?.Credentials?.SecretKey;
-  const sessionToken = creds.data?.Credentials?.SessionToken;
+  const { accessKeyId, secretAccessKey, sessionToken } = creds;
   if (!accessKeyId || !secretAccessKey) throw new Error("Missing credentials (after refresh)!");
   const credentials = { accessKeyId, secretAccessKey, sessionToken };
   const signedWebsocketUrl = await getSignedWssUrl(webSocketHost, credentials, region, "wss", "");

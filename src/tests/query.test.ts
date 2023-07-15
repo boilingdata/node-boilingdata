@@ -1,6 +1,7 @@
 import { EEngineTypes, globalCallbacksList, IBDDataResponse } from "../boilingdata/boilingdata.api";
 import { BDAWSRegion, BoilingData, IJsHooks, isDataResponse } from "../boilingdata/boilingdata";
-import { createLogger } from "bunyan";
+
+const createLogger = (_props: any): Console => console;
 
 jest.setTimeout(60000);
 

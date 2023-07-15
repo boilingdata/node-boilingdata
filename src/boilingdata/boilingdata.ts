@@ -1,9 +1,6 @@
-import { createLogger } from "bunyan";
 import { BDCredentials, getBoilingDataCredentials } from "../common/identity";
 import { EEngineTypes, EEvent, EMessageTypes, IBDDataQuery, IBDDataResponse } from "./boilingdata.api";
 import { v4 as uuidv4 } from "uuid";
-import { WebSocket, MessageEvent } from "ws";
-import { inspect } from "util";
 
 export interface IBDCallbacks {
   onData?: (data: unknown) => void;
@@ -97,9 +94,11 @@ enum ECallbackNames {
   QUERY_FINISHED = "onQueryFinished",
 }
 
+const createLogger = (_props: any): Console => console;
+
 function mapEventToCallbackName(event: IEvent): ECallbackNames {
   const entry = Object.entries(ECallbackNames).find(([key, _value]) => key === event.eventType);
-  if (!entry) throw new Error(`Mapping event type "${inspect(event, false, 7)}" to callback name failed!`);
+  if (!entry) throw new Error(`Mapping event type "${event}" to callback name failed!`);
   return entry[1];
 }
 
@@ -139,26 +138,26 @@ export class BoilingData {
     return new Promise((resolve, reject) => {
       const sock = this.socketInstance;
       const cbs = this.props.globalCallbacks;
-      getBoilingDataCredentials(this.props.username, this.props.password, this.region, this.props.endpointUrl).then(
-        creds => {
+      getBoilingDataCredentials(this.props.username, this.props.password, this.region, this.props.endpointUrl)
+        .then(creds => {
           this.creds = creds;
           sock.socket = new WebSocket(this.creds.signedWebsocketUrl);
-          sock.socket.onclose = () => {
+          sock.socket!.onclose = () => {
             if (cbs?.onSocketClose) cbs.onSocketClose();
           };
-          sock.socket.onopen = () => {
+          sock.socket!.onopen = () => {
             if (cbs?.onSocketOpen) cbs.onSocketOpen();
             resolve();
           };
-          sock.socket.onerror = (err: any) => {
+          sock.socket!.onerror = (err: any) => {
             this.logger.error(err);
             reject(err);
           };
-          sock.socket.onmessage = (msg: MessageEvent) => {
+          sock.socket!.onmessage = (msg: MessageEvent) => {
             return this.handleSocketMessage(msg);
           };
-        },
-      );
+        })
+        .catch(e => console.error(e));
     });
   }
 
