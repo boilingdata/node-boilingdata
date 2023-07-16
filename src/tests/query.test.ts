@@ -187,7 +187,7 @@ describe.skip("boilingdata with Glue Tables", () => {
   });
 });
 
-describe.only("BoilingData with S3 folders", () => {
+describe("BoilingData with S3 folders", () => {
   beforeAll(async () => {
     bdInstance = new BoilingData({ username, password, globalCallbacks, logLevel });
     await bdInstance.connect();
@@ -244,7 +244,7 @@ describe.only("BoilingData with S3 folders", () => {
     `);
   });
 
-  it.only("query over example file without splitAccess", async () => {
+  it("query over example file without splitAccess", async () => {
     const rows = await bdInstance.execQueryPromise({
       splitAccess: false,
       splitSizeMB: 300,

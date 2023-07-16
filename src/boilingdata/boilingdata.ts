@@ -1,6 +1,8 @@
 import { BDCredentials, getBoilingDataCredentials } from "../common/identity";
 import { EEngineTypes, EEvent, EMessageTypes, IBDDataQuery, IBDDataResponse } from "./boilingdata.api";
 import { v4 as uuidv4 } from "uuid";
+import WebSocket from "isomorphic-ws";
+import { MessageEvent } from "isomorphic-ws";
 
 export interface IBDCallbacks {
   onData?: (data: unknown) => void;
