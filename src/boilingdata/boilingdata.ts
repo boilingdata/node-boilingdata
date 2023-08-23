@@ -54,7 +54,6 @@ export interface IBDQuery {
   jsHooks?: IJsHooks;
   scanCursor?: number; // row number to start deliverying from
   engine?: EEngineTypes.DUCKDB | EEngineTypes.SQLITE;
-  keys?: string[];
   splitAccess?: boolean;
   splitSizeMB?: number;
   requestId?: string;
@@ -178,7 +177,6 @@ export class BoilingData {
       this.execQuery({
         ...params,
         sql: params.sql,
-        keys: params.keys ?? [],
         scanCursor: params.scanCursor ?? 0,
         engine: params.engine ?? EEngineTypes.DUCKDB,
         callbacks: {
@@ -262,7 +260,6 @@ export class BoilingData {
         batchFunc: params.jsHooks?.batchFunc?.toString(),
         footerFunc: params.jsHooks?.footerFunc?.toString(),
       },
-      keys: params.keys ?? [],
       scanCursor: params.scanCursor ?? 0,
       engine: params.engine ?? EEngineTypes.DUCKDB,
       requestId,

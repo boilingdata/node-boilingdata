@@ -21,9 +21,8 @@ import { BoilingData, isDataResponse } from "@boilingdata/node-boilingdata";
 async function main() {
   const bdInstance = new BoilingData({ username: process.env["BD_USERNAME"], password: process.env["BD_PASSWORD"] });
   await bdInstance.connect();
-  const sql = `SELECT 's3://KEY' AS key, COUNT(*) AS count FROM parquet_scan('s3://KEY');`;
-  const keys = ["s3://boilingdata-demo/demo.parquet", "s3://boilingdata-demo/demo2.parquet"];
-  const rows = await bdInstance.execQueryPromise({ sql, keys });
+  const sql = `SELECT COUNT(*) FROM parquet_scan('s3://boilingdata-demo/demo.parquet');`;
+  const rows = await bdInstance.execQueryPromise({ sql });
   console.log(rows);
   await bdInstance.close();
 }
@@ -37,13 +36,11 @@ import { BoilingData, isDataResponse } from "@boilingdata/node-boilingdata";
 async function main() {
   const bdInstance = new BoilingData({ username: process.env["BD_USERNAME"], password: process.env["BD_PASSWORD"] });
   await bdInstance.connect();
-  const sql = `SELECT 's3://KEY' AS key, COUNT(*) AS count FROM parquet_scan('s3://KEY');`;
-  const keys = ["s3://boilingdata-demo/demo.parquet", "s3://boilingdata-demo/demo2.parquet"];
+  const sql = `SELECT COUNT(*) FROM parquet_scan('s3://boilingdata-demo/demo.parquet');`;
   const rows = await new Promise<any[]>((resolve, reject) => {
     let r: any[] = [];
     bdInstance.execQuery({
       sql,
-      keys,
       callbacks: {
         onData: (data: IBDDataResponse | unknown) => {
           if (isDataResponse(data)) data.data.map(row => r.push(row));
@@ -121,31 +118,4 @@ bdInstance.execQuery({
     onLogError: (data: any) => reject(data),
   },
 });
-```
-
-## Using `keys`
-
-BoilingData works best for running the same query against many files (for example, creating a historical trend from a dataset that is partitioned by date). To achieve this, you can use the `keys` array to specify a list of files to query, and the string `s3://KEY` in place of the file location in the SQL query:
-
-```typescript
-bdInstance.execQuery(
-  sql: `SELECT 's3://KEY' as fileLocation, COUNT(*) as rowCount FROM parquet_scan('s3://KEY');`,
-  keys: [
-    "s3://bucket/data/2022-01-01.parquet",
-    "s3://bucket/data/2022-01-02.parquet",
-    "s3://bucket/data/2022-01-03.parquet",
-  ])
-```
-
-Results are streamed as soon as they are ready, so it is unlikely that you will recieve results in the same order that you specified the files.
-
-If you do not need to query multiple files, then you do not need to specify the keys, for instance `SELECT COUNT(*) as rowCount FROM parquet_scan('s3://bucket/data/2022-01-01.parquet');`.
-
-You can also now query Glue (Hive) Tables:
-
-```typescript
-bdInstance.execQuery(
-  sql: `SELECT 's3://KEY' as fileLocation, COUNT(*) as rowCount FROM parquet_scan('s3://KEY');`,
-  keys: [ "glue.default.nyctaxis" ]
-)
 ```

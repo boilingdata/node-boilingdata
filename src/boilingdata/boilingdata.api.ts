@@ -16,7 +16,6 @@ export interface IBDDataQuery {
   };
   scanCursor?: number; // offset for rows to deliver
   engine?: string; // DUCKDB (default), SQLITE
-  keys?: string[];
   crossRegionPolicy?: string; // DISALLOWED, ALLOWED, SELECTED
   allowedRegions?: string[];
   readCache?: string; // NONE, MEMORY_COPY, FS_COPY

@@ -69,14 +69,6 @@ describe("boilingdata with DuckDB", () => {
     expect(rows.sort()).toMatchSnapshot();
   });
 
-  it.skip("run multi-key query", async () => {
-    const rows = await bdInstance.execQueryPromise({
-      sql: `SELECT 's3://KEY' AS key, COUNT(*) AS count FROM parquet_scan('s3://KEY');`,
-      keys: ["s3://boilingdata-demo/demo.parquet", "s3://boilingdata-demo/demo2.parquet"],
-    });
-    expect(rows.sort((a, b) => a.key?.localeCompare(b.key))).toMatchSnapshot();
-  });
-
   it("run all meta queries", async () => {
     const metaQueries = [
       "SELECT * FROM list('s3://');",
@@ -157,7 +149,7 @@ describe.skip("boilingdata with Glue Tables", () => {
     logger.info("connection closed.");
   });
 
-  it("can read S3 Keys from Glue Table", async () => {
+  it("can read S3 object paths from Glue Table", async () => {
     const rows = await new Promise<any[]>((resolve, _reject) => {
       const r: any[] = [];
       bdInstance.execQuery({
@@ -179,7 +171,6 @@ describe.skip("boilingdata with Glue Tables", () => {
       const r: any[] = [];
       bdInstance.execQuery({
         sql: `SELECT * FROM glue.default.nyctaxis WHERE year=2009 AND month=8 LIMIT 10;`,
-        keys: ["glue.default.nyctaxis"],
         callbacks: {
           onData: (data: IBDDataResponse | unknown) => {
             if (isDataResponse(data)) data.data.map(row => r.push(row));

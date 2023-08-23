@@ -143,7 +143,7 @@ describe.skip("BoilingData in all North-America and Europe AWS Regions", () => {
       logLevel,
     });
     await bdInstance.connect();
-    const allKeys = [
+    const allTestFiles = [
       "s3://boilingdata-demo/test.parquet",
       "s3://eu-west-2-boilingdata-demo/test.parquet",
       "s3://eu-west-3-boilingdata-demo/test.parquet",
@@ -156,13 +156,14 @@ describe.skip("BoilingData in all North-America and Europe AWS Regions", () => {
       "s3://us-west-2-boilingdata-demo/test.parquet",
       "s3://ca-central-1-boilingdata-demo/test.parquet",
     ];
-    const totalCount = allKeys.length;
+    const totalCount = allTestFiles.length;
     const rows: any[] = [];
-    while (allKeys.length) {
-      const keys = allKeys.splice(0, 5);
-      console.log(totalCount, keys);
-      const sql = `SELECT 's3://KEY' AS key, * FROM parquet_scan('s3://KEY') LIMIT 1;`;
-      const newRows = await bdInstance.execQueryPromise({ sql, keys });
+    while (allTestFiles.length) {
+      const batch = allTestFiles.splice(0, 5);
+      console.log(totalCount, batch);
+      const batchArray = `ARRAY[${batch.map(k => `'${k}'`).join(",")}]`;
+      const sql = `SELECT * FROM parquet_scan(${batchArray}) LIMIT 1;`;
+      const newRows = await bdInstance.execQueryPromise({ sql });
       rows.push(...newRows);
     }
     const sorted = rows.sort((a, b) => a.key.localeCompare(b.key));
@@ -243,84 +244,5 @@ describe.skip("BD can switch the WebSocket connection endpoint dynamically", () 
     rows = await bd.execQueryPromise({ sql });
     expect(rows.sort()).toEqual(expected);
     await bd.close();
-  });
-});
-
-describe.skip("BoilingData in all North-America and Europe AWS Regions", () => {
-  const regions: BDAWSRegion[] = [
-    "eu-west-1",
-    "eu-north-1",
-    "eu-west-2",
-    "eu-west-3",
-    "eu-south-1",
-    "eu-central-1",
-    "us-east-1",
-    "us-east-2",
-    "us-west-1",
-    "us-west-2",
-    "ca-central-1",
-  ];
-
-  it("runs query succesfully in other regions too", async () => {
-    const rows: any[] = [];
-    await Promise.all(
-      regions.map(async region => {
-        const bdInstance = new BoilingData({
-          username,
-          password,
-          globalCallbacks,
-          logLevel,
-          region,
-        });
-        await bdInstance.connect();
-        logger.info(`connected to region ${region}`);
-        const bucket = region == "eu-west-1" ? "boilingdata-demo" : `${region}-boilingdata-demo`;
-        const sql = `SELECT * FROM parquet_scan('s3://${bucket}/test.parquet') LIMIT 1;`;
-        rows.push(await bdInstance.execQueryPromise({ sql }));
-        await bdInstance.close();
-        logger.info(`connection closed to region ${region}`);
-      }),
-    );
-    const sorted = rows.sort();
-    console.log(sorted);
-    expect(sorted).toMatchSnapshot();
-  });
-
-  it("can query cross-region", async () => {
-    const bdInstance = new BoilingData({
-      username,
-      password,
-      globalCallbacks,
-      logLevel,
-    });
-    await bdInstance.connect();
-    const allKeys = [
-      "s3://boilingdata-demo/test.parquet",
-      "s3://eu-west-2-boilingdata-demo/test.parquet",
-      "s3://eu-west-3-boilingdata-demo/test.parquet",
-      "s3://eu-north-1-boilingdata-demo/test.parquet",
-      "s3://eu-south-1-boilingdata-demo/test.parquet",
-      "s3://eu-central-1-boilingdata-demo/test.parquet",
-      "s3://us-east-1-boilingdata-demo/test.parquet",
-      "s3://us-east-2-boilingdata-demo/test.parquet",
-      "s3://us-west-1-boilingdata-demo/test.parquet",
-      "s3://us-west-2-boilingdata-demo/test.parquet",
-      "s3://ca-central-1-boilingdata-demo/test.parquet",
-    ];
-    const totalCount = allKeys.length;
-    const rows: any[] = [];
-    while (allKeys.length) {
-      const keys = allKeys.splice(0, 5);
-      console.log(totalCount, keys);
-      const sql = `SELECT 's3://KEY' AS key, * FROM parquet_scan('s3://KEY') LIMIT 1;`;
-      const newRows = await bdInstance.execQueryPromise({ sql, keys });
-      rows.push(...newRows);
-    }
-    const sorted = rows.sort((a, b) => a.key.localeCompare(b.key));
-    console.log(sorted);
-    expect(sorted).toMatchSnapshot();
-
-    await bdInstance.close();
-    logger.info(`connection closed`);
   });
 });
