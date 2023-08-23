@@ -1,7 +1,7 @@
 import { HttpRequest } from "@aws-sdk/protocol-http";
 import { SignatureV4 } from "@aws-sdk/signature-v4";
 import { Sha256 } from "@aws-crypto/sha256-browser";
-import { Credentials, Provider } from "@aws-sdk/types";
+import { AwsCredentialIdentity, Provider } from "@aws-sdk/types";
 
 function getSigner(region: string, credentials: any): SignatureV4 {
   const service = "execute-api";
@@ -10,7 +10,7 @@ function getSigner(region: string, credentials: any): SignatureV4 {
 
 export async function getSignedWssUrl(
   hostAndOptionalPort: string,
-  credentials: Credentials | Provider<Credentials>,
+  credentials: AwsCredentialIdentity | Provider<AwsCredentialIdentity>,
   region: string,
   protocol = "wss",
   path = "/dev",

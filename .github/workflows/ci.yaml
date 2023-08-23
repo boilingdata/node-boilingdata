@@ -12,9 +12,9 @@ jobs:
     environment: npmjs
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
       - name: CI
         env:
           BD_USERNAME: ${{ secrets.BD_USERNAME }}

@@ -1,4 +1,10 @@
-import { CognitoIdToken, CognitoUserPool, CognitoUser, AuthenticationDetails } from "amazon-cognito-identity-js";
+import {
+  CognitoIdToken,
+  CognitoUserPool,
+  CognitoUser,
+  AuthenticationDetails,
+  ChallengeName,
+} from "amazon-cognito-identity-js";
 import { fromCognitoIdentityPool } from "@aws-sdk/credential-provider-cognito-identity";
 import { CognitoIdentityClient } from "@aws-sdk/client-cognito-identity";
 import { getSignedWssUrl } from "./signature";
@@ -16,13 +22,18 @@ export interface BDCredentials {
   signedWebsocketUrl: string;
 }
 
-function getIdToken(Username: string, Password: string): Promise<CognitoIdToken> {
+function getIdToken(Username: string, Password: string, mfa?: number): Promise<CognitoIdToken> {
   return new Promise((resolve, reject) => {
     const loginDetails = { Username, Password };
     const userData = { Username, Pool };
     const cognitoUser = new CognitoUser(userData);
     const authenticationDetails = new AuthenticationDetails(loginDetails);
     cognitoUser.authenticateUser(authenticationDetails, {
+      mfaRequired: async function (challengeName: ChallengeName, challengeParameters: any) {
+        console.log({ challengeName, challengeParameters });
+        if (!mfa) return reject("MFA required");
+        cognitoUser.sendMFACode(`${mfa}`, this);
+      },
       onSuccess: (result: any) => resolve(result?.getIdToken()),
       onFailure: (err: any) => reject(err),
     });
@@ -54,14 +65,21 @@ export async function getBoilingDataCredentials(
   password: string,
   region: BDAWSRegion = IDP_REGION,
   endpointUrl?: string,
+  mfa?: number,
 ): Promise<BDCredentials> {
   const webSocketHost = getWsApiDomain(region, endpointUrl);
-  const idToken = await getIdToken(username, password);
+  const idToken = await getIdToken(username, password, mfa);
   const creds = await refreshCredsWithToken(idToken.getJwtToken());
   const { accessKeyId, secretAccessKey, sessionToken } = creds;
   if (!accessKeyId || !secretAccessKey) throw new Error("Missing credentials (after refresh)!");
   const credentials = { accessKeyId, secretAccessKey, sessionToken };
-  const signedWebsocketUrl = await getSignedWssUrl(webSocketHost, credentials, region, "wss", "");
+  const signedWebsocketUrl = await getSignedWssUrl(
+    webSocketHost,
+    credentials,
+    region,
+    "wss",
+    endpointUrl ? "/prodbd" : "",
+  );
   const cognitoUsername = idToken.decodePayload()["cognito:username"];
   return { cognitoUsername, signedWebsocketUrl };
 }

@@ -34,6 +34,7 @@ export type BDAWSRegion =
 export interface IBoilingData {
   username: string;
   password: string;
+  mfa?: number;
   logLevel?: "trace" | "debug" | "info" | "warn" | "error" | "fatal"; // Match with Bunyan
   globalCallbacks?: IBDCallbacks;
   region?: BDAWSRegion;
@@ -140,7 +141,13 @@ export class BoilingData {
     return new Promise((resolve, reject) => {
       const sock = this.socketInstance;
       const cbs = this.props.globalCallbacks;
-      getBoilingDataCredentials(this.props.username, this.props.password, this.region, this.props.endpointUrl)
+      getBoilingDataCredentials(
+        this.props.username,
+        this.props.password,
+        this.region,
+        this.props.endpointUrl,
+        this.props.mfa,
+      )
         .then(creds => {
           this.creds = creds;
           sock.socket = new WebSocket(this.creds.signedWebsocketUrl);
