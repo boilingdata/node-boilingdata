@@ -3,6 +3,8 @@
 ![CI](https://github.com/boilingdata/node-boilingdata/workflows/CI/badge.svg?branch=main)
 ![BuiltBy](https://img.shields.io/badge/TypeScript-Lovers-black.svg "img.shields.io")
 
+You can use this SDK both on browser and with NodeJS.
+
 > See also BoilingData command line client tool: [https://github.com/boilingdata/boilingdata-bdcli](https://github.com/boilingdata/boilingdata-bdcli).
 
 ## Installing the SDK
