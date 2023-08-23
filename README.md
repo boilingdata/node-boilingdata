@@ -56,7 +56,7 @@ async function main() {
 }
 ```
 
-This repository contains JS/TS BoilingData SDK. Please see the integration tests on `tests/query.test.ts` for for more examples.
+This repository contains JS/TS BoilingData client SDK that can be used both with NodeJS and in browser. Please see the integration tests on `tests/query.test.ts` for for more examples.
 
 ### Callbacks
 

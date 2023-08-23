@@ -31,6 +31,6 @@
     "inlineSources": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*.ts", "jest.config.js", "pgsql-parser.d.ts"],
+  "include": ["src/**/*.ts", "jest.config.js", "pgsql-parser.d.ts", "src/universal-websocket-client.d.ts"],
   "exclude": ["**/*.test.ts"]
 }

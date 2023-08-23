@@ -10,9 +10,9 @@ jobs:
     environment: npmjs
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v3
         with:
-          node-version: 14
+          node-version: 18
       - name: CI
         env:
           BD_USERNAME: ${{secrets.BD_USERNAME}}
@@ -29,9 +29,9 @@ jobs:
     environment: npmjs
     steps:
       - uses: actions/checkout@v1
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v3
         with:
-          node-version: 14
+          node-version: 18
           registry-url: https://registry.npmjs.org/
       - run: |
           yarn build
@@ -44,9 +44,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v3
         with:
-          node-version: 14
+          node-version: 18
           always-auth: true
           registry-url: https://npm.pkg.github.com/
       - name: Publish to GitHub packages repository

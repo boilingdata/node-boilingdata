@@ -1,1 +1,1 @@
-export { IBoilingData, BoilingData } from "./boilingdata/boilingdata";
+export { IBoilingData, BoilingData, IBDQuery, IBDCallbacks } from "./boilingdata/boilingdata";
