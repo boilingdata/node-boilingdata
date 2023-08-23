@@ -1,7 +1,9 @@
-# BoilingData JS/TS SDK
+# BoilingData WebSocket client JS/TS SDK
 
 ![CI](https://github.com/boilingdata/node-boilingdata/workflows/CI/badge.svg?branch=main)
 ![BuiltBy](https://img.shields.io/badge/TypeScript-Lovers-black.svg "img.shields.io")
+
+> See also BoilingData command line client tool: [https://github.com/boilingdata/boilingdata-bdcli](https://github.com/boilingdata/boilingdata-bdcli).
 
 ## Installing the SDK
 
