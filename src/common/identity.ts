@@ -66,14 +66,24 @@ function getWsApiDomain(region: string, endpointUrl?: string): string {
 }
 
 export async function getBoilingDataCredentials(
-  username: string,
-  password: string,
+  username?: string,
+  password?: string,
   region: BDAWSRegion = IDP_REGION,
   endpointUrl?: string,
   mfa?: number,
+  authContext?: { idToken?: any; accessToken?: any; refreshToken?: any },
 ): Promise<BDCredentials> {
   const webSocketHost = getWsApiDomain(region, endpointUrl);
-  const idToken = await getIdToken(username, password, mfa);
+  let idToken: CognitoIdToken | undefined = undefined;
+  if (!authContext && username && password) {
+    console.log("Fetching ID token with username and pw");
+    idToken = await getIdToken(username, password, mfa);
+  }
+  if (authContext && authContext.idToken?.jwtToken) {
+    console.log("Using existing ID token");
+    idToken = new CognitoIdToken({ IdToken: authContext.idToken?.jwtToken });
+  }
+  if (!idToken) throw new Error("No credentials for creating signed WS URL");
   const creds = await refreshCredsWithToken(idToken.getJwtToken());
   const { accessKeyId, secretAccessKey, sessionToken } = creds;
   if (!accessKeyId || !secretAccessKey) throw new Error("Missing credentials (after refresh)!");

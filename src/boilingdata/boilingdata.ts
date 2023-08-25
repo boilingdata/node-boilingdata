@@ -32,9 +32,10 @@ export type BDAWSRegion =
   | "ca-central-1";
 
 export interface IBoilingData {
-  username: string;
-  password: string;
+  username?: string;
+  password?: string;
   mfa?: number;
+  authcontext?: { idToken?: any; accessToken?: any; refreshToken?: any };
   logLevel?: "trace" | "debug" | "info" | "warn" | "error" | "fatal"; // Match with Bunyan
   globalCallbacks?: IBDCallbacks;
   region?: BDAWSRegion;
@@ -146,6 +147,7 @@ export class BoilingData {
         this.region,
         this.props.endpointUrl,
         this.props.mfa,
+        this.props.authcontext,
       )
         .then(creds => {
           this.creds = creds;
