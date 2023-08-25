@@ -34,6 +34,11 @@ function getIdToken(Username: string, Password: string, mfa?: number): Promise<C
         if (!mfa) return reject("MFA required");
         cognitoUser.sendMFACode(`${mfa}`, this);
       },
+      totpRequired: async function (challengeName: ChallengeName, challengeParameters: any) {
+        console.log({ challengeName, challengeParameters });
+        if (!mfa) return reject("TOTP required");
+        cognitoUser.sendMFACode(`${mfa}`, this, "SOFTWARE_TOKEN_MFA");
+      },
       onSuccess: (result: any) => resolve(result?.getIdToken()),
       onFailure: (err: any) => reject(err),
     });
