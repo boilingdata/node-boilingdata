@@ -167,7 +167,10 @@ export class BoilingData {
             return this.handleSocketMessage(msg);
           };
         })
-        .catch(e => console.error(e));
+        .catch(err => {
+          console.error(err);
+          throw err;
+        });
     });
   }
 
