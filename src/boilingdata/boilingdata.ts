@@ -169,7 +169,7 @@ export class BoilingData {
         })
         .catch(err => {
           console.error(err);
-          throw err;
+          reject(err);
         });
     });
   }
