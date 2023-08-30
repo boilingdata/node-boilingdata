@@ -274,13 +274,6 @@ Array [
     Object {
       "ETag": "",
       "LastModified": "",
-      "Name": "t",
-      "Size": 0,
-      "StorageClass": "",
-    },
-    Object {
-      "ETag": "",
-      "LastModified": "",
       "Name": "test_folder",
       "Size": 0,
       "StorageClass": "",
@@ -289,13 +282,6 @@ Array [
       "ETag": "",
       "LastModified": "",
       "Name": "test_folder2",
-      "Size": 0,
-      "StorageClass": "",
-    },
-    Object {
-      "ETag": "",
-      "LastModified": "",
-      "Name": "uploads",
       "Size": 0,
       "StorageClass": "",
     },
