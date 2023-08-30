@@ -1,6 +1,6 @@
 {
   "name": "@boilingdata/node-boilingdata",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "BoilingData WebSocket client for Node and browser",
   "main": "dist/cjs/index.js",
   "types": "dist/cjs/index.d.ts",
