@@ -33,7 +33,7 @@ describe("boilingdata with DuckDB", () => {
       password,
       globalCallbacks,
       logLevel,
-      endpointUrl: "4rpyi2ae3f.execute-api.eu-west-1.amazonaws.com",
+      endpointUrl: "wss://4rpyi2ae3f.execute-api.eu-west-1.amazonaws.com/prodbd/",
     });
     await bdInstance.connect();
     logger.info("connected.");
