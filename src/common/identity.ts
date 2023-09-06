@@ -33,12 +33,12 @@ function getIdToken(Username: string, Password: string, mfa?: number): Promise<C
       const authenticationDetails = new AuthenticationDetails(loginDetails);
       cognitoUser.authenticateUser(authenticationDetails, {
         mfaRequired: async function (challengeName: ChallengeName, challengeParameters: any) {
-          console.log({ challengeName, challengeParameters });
+          console.log({ callback: "mfaRequired", challengeName, challengeParameters });
           if (!mfa) return reject("MFA required");
           cognitoUser.sendMFACode(`${mfa}`, this);
         },
         totpRequired: async function (challengeName: ChallengeName, challengeParameters: any) {
-          console.log({ challengeName, challengeParameters });
+          console.log({ callback: "totpRequired", challengeName, challengeParameters });
           if (!mfa) return reject("TOTP required");
           cognitoUser.sendMFACode(`${mfa}`, this, "SOFTWARE_TOKEN_MFA");
         },
