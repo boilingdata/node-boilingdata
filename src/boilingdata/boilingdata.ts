@@ -59,6 +59,8 @@ export interface IBDQuery {
   splitSizeMB?: number;
   requestId?: string;
   callbacks?: IBDCallbacks;
+  bdStsToken?: string; // access token
+  shareInfo?: any; // share information
 }
 
 export interface ISocketInstance {
@@ -255,6 +257,7 @@ export class BoilingData {
     this.socketInstance.bumpActivity();
     const requestId = params.requestId ?? uuidv4();
     const payload: IBDDataQuery = {
+      ...params,
       splitAccess: params.splitAccess !== undefined ? params.splitAccess == true : false, // TODO: set true by default
       splitSizeMB: params.splitSizeMB !== undefined ? params.splitSizeMB : 500,
       messageType: EMessageTypes.SQL_QUERY,
