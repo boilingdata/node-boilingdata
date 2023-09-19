@@ -190,12 +190,6 @@ Array [
   Array [],
   Array [
     Object {
-      "CreationDate": "2021-12-06T12:06:12.060Z",
-      "Name": "boilingdata-demo",
-    },
-  ],
-  Array [
-    Object {
       "awsAccountId": "589434896614",
       "externalId": "OPL0DcV9pKiQg7/YXxiKQkwOmYQk7wj9FoBS4P7GNI8=",
       "isS3DemoRole": true,
@@ -205,6 +199,16 @@ Array [
   Array [
     Object {
       "pragma": "s3AccessRoleArn='arn:aws:iam::123456789012:role/EXAMPLE';",
+    },
+  ],
+  Array [
+    Object {
+      "CreationDate": "2021-12-06T12:06:12.060Z",
+      "Name": "boilingdata-demo",
+    },
+    Object {
+      "CreationDate": "2021-12-06T12:06:12.060Z",
+      "Name": "boilingdata-user",
     },
   ],
   Array [
@@ -267,21 +271,21 @@ Array [
     Object {
       "ETag": "",
       "LastModified": "",
-      "Name": "cc-demo",
+      "Name": "cc-demo/",
       "Size": 0,
       "StorageClass": "",
     },
     Object {
       "ETag": "",
       "LastModified": "",
-      "Name": "test_folder",
+      "Name": "test_folder/",
       "Size": 0,
       "StorageClass": "",
     },
     Object {
       "ETag": "",
       "LastModified": "",
-      "Name": "test_folder2",
+      "Name": "test_folder2/",
       "Size": 0,
       "StorageClass": "",
     },

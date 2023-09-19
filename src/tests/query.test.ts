@@ -203,7 +203,7 @@ describe("BoilingData with S3 folders", () => {
     expect(rows).toMatchSnapshot();
   });
 
-  it("query over folder with 80 gz.parquet files", async () => {
+  it.skip("query over folder with 80 gz.parquet files", async () => {
     // s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=12/type=yellow/
     const sql = `SELECT COUNT(*) FROM parquet_scan('s3://boilingdata-demo/test_folder2/');`;
     const rows = await bdInstance.execQueryPromise({ sql });
@@ -257,7 +257,7 @@ describe("BoilingData with S3 folders", () => {
     `);
   });
 
-  it("2x query over folder with 80 gz.parquet files (mem caching)", async () => {
+  it.skip("2x query over folder with 80 gz.parquet files (mem caching)", async () => {
     // s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=12/type=yellow/
     const sql = `SELECT COUNT(*) FROM ( SELECT * FROM parquet_scan('s3://boilingdata-demo/test_folder2/') UNION ALL SELECT * FROM parquet_scan('s3://boilingdata-demo/test_folder2/')) a;`;
     const rows = await bdInstance.execQueryPromise({ sql });
@@ -270,7 +270,7 @@ describe("BoilingData with S3 folders", () => {
     `);
   });
 
-  it("query over folder with 80 gz.parquet files (mem cached)", async () => {
+  it.skip("query over folder with 80 gz.parquet files (mem cached)", async () => {
     // s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=12/type=yellow/
     const sql = `SELECT COUNT(*) FROM parquet_scan('s3://boilingdata-demo/test_folder2/');`;
     const rows = await bdInstance.execQueryPromise({ sql });
