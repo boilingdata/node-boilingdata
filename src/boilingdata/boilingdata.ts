@@ -73,8 +73,8 @@ export interface ISocketInstance {
       receivedSubBatches: Map<number, Set<number>>;
     }
   >;
-  send: (payload: IBDDataQuery) => void;
-  query: (params: IBDQuery) => void;
+  send: (payload: IBDDataQuery) => Promise<void>;
+  query: (params: IBDQuery) => Promise<void>;
   bumpActivity: () => void;
   socket?: WebSocket;
   queryCallbacks: Map<string, IBDCallbacks>;
@@ -123,10 +123,29 @@ export class BoilingData {
       queries: new Map(), // no queries yet
       queryCallbacks: new Map(), // no queries yet, so no query specific callbacks either
       lastActivity: Date.now(),
-      send: (payload: IBDDataQuery) => {
+      send: async (payload: IBDDataQuery) => {
         this.logger.debug("PAYLOAD(send):\n", JSON.stringify(payload));
-        this.socketInstance.socket?.send(JSON.stringify(payload));
-        this.execEventCallback({ eventType: EEvent.REQUEST, requestId: payload.requestId, payload });
+        try {
+          await new Promise<void>((resolve, reject) => {
+            if (!this.socketInstance.socket) {
+              return reject({ message: "No socket instance, need to connect." });
+            }
+            if (this.socketInstance.socket.readyState != WebSocket.OPEN) {
+              return reject({
+                message: `Socket is not OPEN(1) (${this.socketInstance.socket.readyState}), need to re-connect`,
+              });
+            }
+            this.socketInstance.socket.send(JSON.stringify(payload), err => {
+              if (err) reject(err);
+              resolve();
+            });
+          });
+          this.execEventCallback({ eventType: EEvent.REQUEST, requestId: payload.requestId, payload });
+        } catch (error) {
+          console.error(error);
+          this.execEventCallback({ eventType: EEvent.LOG_ERROR, requestId: payload.requestId, payload: { error } });
+          return;
+        }
       },
       bumpActivity: () => {
         this.socketInstance.lastActivity = Date.now();
@@ -251,7 +270,29 @@ export class BoilingData {
     }
   }
 
-  public execQuery(params: IBDQuery): void {
+  private getSocketReadyStateString(
+    readyState:
+      | typeof WebSocket.CONNECTING
+      | typeof WebSocket.OPEN
+      | typeof WebSocket.CLOSING
+      | typeof WebSocket.CLOSED
+      | undefined,
+  ): string {
+    switch (readyState) {
+      case WebSocket.CONNECTING:
+        return "CONNECTING";
+      case WebSocket.OPEN:
+        return "OPEN";
+      case WebSocket.CLOSED:
+        return "CLOSED";
+      case WebSocket.CLOSING:
+        return "CLOSING";
+      default:
+        return "UNKNOWN";
+    }
+  }
+
+  public async execQuery(params: IBDQuery): Promise<void> {
     this.validateJsHooks(params);
     this.logger.info("execQuery:", params);
     this.socketInstance.bumpActivity();
@@ -289,7 +330,9 @@ export class BoilingData {
       onQueryFinished: params.callbacks?.onQueryFinished,
     });
     this.logger.debug("PAYLOAD:\n", payload);
-    this.socketInstance.send(payload);
+    this.logger.debug("WebSocket.readyState:", this.getSocketReadyStateString(this.socketInstance.socket?.readyState));
+    if (this.socketInstance.socket?.readyState != WebSocket.OPEN) await this.connect();
+    await this.socketInstance.send(payload);
   }
 
   private processBatchInfo(message: unknown): void {
