@@ -18,7 +18,7 @@ yarn add @boilingdata/node-boilingdata
 `execQueryPromise()` method can be used to await for the results directly.
 
 ```typescript
-import { BoilingData, isDataResponse } from "@boilingdata/node-boilingdata";
+import { BoilingData } from "@boilingdata/node-boilingdata";
 
 async function main() {
   const bdInstance = new BoilingData({ username: process.env["BD_USERNAME"], password: process.env["BD_PASSWORD"] });

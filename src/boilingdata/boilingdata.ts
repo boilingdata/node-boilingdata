@@ -99,7 +99,20 @@ enum ECallbackNames {
   QUERY_FINISHED = "onQueryFinished",
 }
 
-const createLogger = (_props: any): Console => console;
+const createLogger = (props: any): Console => {
+  const logLevel = props.logLevel ?? "info";
+
+  // logLevel == "error"
+  // ==> log.info("") --> NA
+  return {
+    ...console,
+    debug: (a, ...rest) => (["debug"].includes(logLevel) ? console.log(a, ...rest) : undefined),
+    log: (a, ...rest) => (["debug", "info"].includes(logLevel) ? console.log(a, ...rest) : undefined),
+    info: (a, ...rest) => (["debug", "info"].includes(logLevel) ? console.log(a, ...rest) : undefined),
+    warn: (a, ...rest) => (["debug", "info", "warn"].includes(logLevel) ? console.log(a, ...rest) : undefined),
+    error: (a, ...rest) => console.log(a, ...rest),
+  };
+};
 
 function mapEventToCallbackName(event: IEvent): ECallbackNames {
   const entry = Object.entries(ECallbackNames).find(([key, _value]) => key === event.eventType);
@@ -115,9 +128,10 @@ export class BoilingData {
   private region: BDAWSRegion;
   private creds?: BDCredentials;
   private socketInstance: ISocketInstance;
-  private logger = createLogger({ name: "boilingdata", level: this.props.logLevel ?? "info" });
+  private logger: Console;
 
   constructor(public props: IBoilingData) {
+    this.logger = createLogger({ name: "boilingdata", logLevel: this.props.logLevel ?? "info" });
     this.region = this.props.region ? this.props.region : "eu-west-1";
     this.socketInstance = {
       queries: new Map(), // no queries yet
@@ -169,6 +183,7 @@ export class BoilingData {
         this.props.endpointUrl,
         this.props.mfa,
         this.props.authcontext,
+        this.logger,
       )
         .then(creds => {
           this.creds = creds;
@@ -294,7 +309,7 @@ export class BoilingData {
 
   public async execQuery(params: IBDQuery): Promise<void> {
     this.validateJsHooks(params);
-    this.logger.info("execQuery:", params);
+    this.logger.debug("execQuery:", params);
     this.socketInstance.bumpActivity();
     const requestId = params.requestId ?? uuidv4();
     const payload: IBDDataQuery = {

@@ -9,7 +9,7 @@
   "license": "MIT",
   "private": false,
   "files": [
-    "dist/"
+    "dist/*"
   ],
   "repository": {
     "type": "git",

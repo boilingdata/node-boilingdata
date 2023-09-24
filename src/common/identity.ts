@@ -22,27 +22,27 @@ export interface BDCredentials {
   signedWebsocketUrl: string;
 }
 
-function getIdToken(Username: string, Password: string, mfa?: number): Promise<CognitoIdToken> {
+function getIdToken(Username: string, Password: string, mfa?: number, logger?: Console): Promise<CognitoIdToken> {
   return new Promise((resolve, reject) => {
     try {
       const loginDetails = { Username, Password };
-      console.log("====", Pool.getUserPoolId(), Pool.getClientId(), Pool.getCurrentUser());
+      logger?.debug("====", Pool.getUserPoolId(), Pool.getClientId(), Pool.getCurrentUser());
       const userData = { Username, Pool };
       const cognitoUser = new CognitoUser(userData);
-      console.log("====", cognitoUser.getUsername());
+      logger?.debug("====", cognitoUser.getUsername());
       const authenticationDetails = new AuthenticationDetails(loginDetails);
       cognitoUser.authenticateUser(authenticationDetails, {
         mfaRequired: async function (challengeName: ChallengeName, challengeParameters: any) {
-          console.log({ callback: "mfaRequired", challengeName, challengeParameters });
+          logger?.debug({ callback: "mfaRequired", challengeName, challengeParameters });
           if (!mfa) return reject("MFA required");
           cognitoUser.sendMFACode(`${mfa}`, this);
         },
         totpRequired: async function (challengeName: ChallengeName, challengeParameters: any) {
-          console.log({ callback: "totpRequired", challengeName, challengeParameters });
+          logger?.debug({ callback: "totpRequired", challengeName, challengeParameters });
           if (!mfa) return reject("TOTP required");
           cognitoUser.sendMFACode(`${mfa}`, this, "SOFTWARE_TOKEN_MFA");
         },
-        onSuccess: (result: any) => resolve(result?.getIdToken()),
+        onSuccess: (result: any) => resolve(result?.getIdToken(undefined, undefined, undefined, logger)),
         onFailure: (err: any) => reject(err),
       });
     } catch (err) {
@@ -63,7 +63,7 @@ async function refreshCredsWithToken(jwtIdToken: string): Promise<any> {
     }),
   });
   const creds = await cognitoidentity.config.credentials();
-  console.log(creds.expiration);
+  // console.log(creds.expiration);
   return creds;
 }
 
@@ -83,15 +83,16 @@ export async function getBoilingDataCredentials(
   endpointUrl?: string,
   mfa?: number,
   authContext?: { idToken?: any; accessToken?: any; refreshToken?: any },
+  logger?: Console,
 ): Promise<BDCredentials> {
   const webSocketHost = getWsApiDomain(region, endpointUrl);
   let idToken: CognitoIdToken | undefined = undefined;
   try {
     if (!authContext && username && password) {
-      console.log("Fetching ID token with username and pw");
-      idToken = await getIdToken(username, password, mfa);
+      logger?.debug("Fetching ID token with username and pw");
+      idToken = await getIdToken(username, password, mfa, logger);
     } else if (authContext && authContext.idToken?.jwtToken) {
-      console.log("Using existing ID token");
+      logger?.debug("Using existing ID token");
       idToken = new CognitoIdToken({ IdToken: authContext.idToken?.jwtToken });
     }
     if (!idToken) throw new Error("No credentials for creating signed WS URL");
