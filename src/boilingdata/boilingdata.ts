@@ -3,6 +3,7 @@ import { EEngineTypes, EEvent, EMessageTypes, IBDDataQuery, IBDDataResponse } fr
 import { v4 as uuidv4 } from "uuid";
 import WebSocket from "isomorphic-ws";
 import { MessageEvent } from "isomorphic-ws";
+import jsonBigInt from "json-bigint";
 
 export interface IBDCallbacks {
   onData?: (data: unknown) => void;
@@ -116,7 +117,7 @@ const createLogger = (props: any): Console => {
 
 function mapEventToCallbackName(event: IEvent): ECallbackNames {
   const entry = Object.entries(ECallbackNames).find(([key, _value]) => key === event.eventType);
-  if (!entry) throw new Error(`Mapping event type "${event}" to callback name failed!`);
+  if (!entry) throw new Error(`Mapping event type "${JSON.stringify(event)}" to callback name failed!`);
   return entry[1];
 }
 
@@ -407,7 +408,7 @@ export class BoilingData {
     if (data.length <= 0) return this.logger.info("No data on WebSocket incoming message");
     let message;
     try {
-      message = JSON.parse(data);
+      message = jsonBigInt.parse(data);
       const eventType = message?.messageType == "LOG_MESSAGE" ? message?.logLevel : message?.messageType;
       this.execEventCallback({ eventType, requestId: message.requestId, payload: message });
     } catch (error) {
