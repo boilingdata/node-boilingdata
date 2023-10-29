@@ -17,6 +17,7 @@ export interface IBDCallbacks {
   onLambdaEvent?: (data: unknown) => void;
   onSocketOpen?: () => void;
   onSocketClose?: () => void;
+  unknown?: (data: unknown) => void;
 }
 
 export type BDAWSRegion =
@@ -98,6 +99,7 @@ enum ECallbackNames {
   INFO = "onInfo",
   LAMBDA_EVENT = "onLambdaEvent",
   QUERY_FINISHED = "onQueryFinished",
+  UNKNOWN = "unknown",
 }
 
 const createLogger = (props: any): Console => {
@@ -117,7 +119,7 @@ const createLogger = (props: any): Console => {
 
 function mapEventToCallbackName(event: IEvent): ECallbackNames {
   const entry = Object.entries(ECallbackNames).find(([key, _value]) => key === event.eventType);
-  if (!entry) throw new Error(`Mapping event type "${JSON.stringify(event)}" to callback name failed!`);
+  if (!entry) return ECallbackNames.UNKNOWN; // throw new Error(`Mapping event type "${JSON.stringify(event)}" to callback name failed!`);
   return entry[1];
 }
 
