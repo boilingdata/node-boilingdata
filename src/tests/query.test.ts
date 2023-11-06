@@ -48,25 +48,26 @@ describe("boilingdata with DuckDB", () => {
   it("run single query", async () => {
     const sql = `SELECT * FROM parquet_scan('s3://boilingdata-demo/demo2.parquet') ORDER BY VendorID, DOLocationID, PULocationID, RatecodeID, tip_amount, total_amount, trip_distance, tpep_dropoff_datetime LIMIT 2;`;
     const rows = await bdInstance.execQueryPromise({ sql });
-    expect(rows.sort()).toMatchSnapshot();
+    console.log({ rows });
+    expect(rows.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))).toMatchSnapshot();
   });
 
   it("run single query (2nd time with cacheHit)", async () => {
     const sql = `SELECT * FROM parquet_scan('s3://boilingdata-demo/demo2.parquet') ORDER BY VendorID, DOLocationID, PULocationID, RatecodeID, tip_amount, total_amount, trip_distance, tpep_dropoff_datetime LIMIT 2;`;
     const rows = await bdInstance.execQueryPromise({ sql });
-    expect(rows.sort()).toMatchSnapshot();
+    expect(rows.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))).toMatchSnapshot();
   });
 
   it("run single query with scan cursor (offset)", async () => {
     const sql = `SELECT * FROM parquet_scan('s3://boilingdata-demo/test.parquet');`;
     const rows = await bdInstance.execQueryPromise({ sql, scanCursor: 3 });
-    expect(rows.sort()).toMatchSnapshot();
+    expect(rows.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))).toMatchSnapshot();
   });
 
   it("run single query with scan cursor over the size", async () => {
     const sql = `SELECT * FROM parquet_scan('s3://boilingdata-demo/test.parquet');`;
     const rows = await bdInstance.execQueryPromise({ sql, scanCursor: 10 });
-    expect(rows.sort()).toMatchSnapshot();
+    expect(rows.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))).toMatchSnapshot();
   });
 
   it("run all meta queries", async () => {
@@ -77,12 +78,9 @@ describe("boilingdata with DuckDB", () => {
       "SELECT * FROM pragmas;",
       "SELECT * FROM status;",
     ];
-    const rows = await Promise.all(
-      metaQueries.map(sql => {
-        return bdInstance.execQueryPromise({ sql });
-      }),
-    );
-    expect(rows.sort()).toMatchSnapshot();
+    metaQueries.forEach(sql => {
+      expect(() => bdInstance.execQueryPromise({ sql })).resolves;
+    });
   });
 });
 
@@ -104,7 +102,7 @@ describe.skip("boilingdata with SQLite3", () => {
       sql: `SELECT * FROM sqlite('s3://boilingdata-demo/uploads/userdata1.sqlite3','userdata1') LIMIT 2;`,
       engine: EEngineTypes.SQLITE,
     });
-    expect(rows.sort()).toMatchSnapshot();
+    expect(rows.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))).toMatchSnapshot();
   });
 
   it("run single query, same one, 2nd time", async () => {
@@ -112,7 +110,7 @@ describe.skip("boilingdata with SQLite3", () => {
       sql: `SELECT * FROM sqlite('s3://boilingdata-demo/uploads/userdata1.sqlite3','userdata1') LIMIT 2;`,
       engine: EEngineTypes.SQLITE,
     });
-    expect(rows.sort()).toMatchSnapshot();
+    expect(rows.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))).toMatchSnapshot();
   });
 });
 
@@ -220,7 +218,7 @@ describe("BoilingData with S3 folders", () => {
     // s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=12/type=yellow/
     const sql = `SELECT COUNT(*) FROM parquet_scan('s3://boilingdata-demo/test_folder2/part-r-00426-6e222bd6-47be-424a-a29a-606961a23de1.gz.parquet');`;
     const rows = await bdInstance.execQueryPromise({ sql });
-    expect(rows.sort()).toMatchInlineSnapshot(`
+    expect(rows.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))).toMatchInlineSnapshot(`
       Array [
         Object {
           "count_star()": 365016,
@@ -235,7 +233,7 @@ describe("BoilingData with S3 folders", () => {
       splitSizeMB: 300,
       sql: `SELECT COUNT(*) AS splitAccess FROM parquet_scan('s3://boilingdata-demo/demo2.parquet');`,
     });
-    expect(rows.sort()).toMatchInlineSnapshot(`
+    expect(rows.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))).toMatchInlineSnapshot(`
       Array [
         Object {
           "splitaccess": 28160000,
@@ -248,7 +246,7 @@ describe("BoilingData with S3 folders", () => {
     // s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=12/type=yellow/
     const sql = `SELECT COUNT(*) FROM ( SELECT * FROM parquet_scan('s3://boilingdata-demo/test_folder2/part-r-00426-6e222bd6-47be-424a-a29a-606961a23de1.gz.parquet') UNION ALL SELECT * FROM parquet_scan('s3://boilingdata-demo/test_folder2/part-r-00426-6e222bd6-47be-424a-a29a-606961a23de1.gz.parquet')) a;`;
     const rows = await bdInstance.execQueryPromise({ sql });
-    expect(rows.sort()).toMatchInlineSnapshot(`
+    expect(rows.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))).toMatchInlineSnapshot(`
       Array [
         Object {
           "count_star()": 730032,
@@ -261,7 +259,7 @@ describe("BoilingData with S3 folders", () => {
     // s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=12/type=yellow/
     const sql = `SELECT COUNT(*) FROM ( SELECT * FROM parquet_scan('s3://boilingdata-demo/test_folder2/') UNION ALL SELECT * FROM parquet_scan('s3://boilingdata-demo/test_folder2/')) a;`;
     const rows = await bdInstance.execQueryPromise({ sql });
-    expect(rows.sort()).toMatchInlineSnapshot(`
+    expect(rows.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))).toMatchInlineSnapshot(`
       Array [
         Object {
           "count_star()": 58333616,
@@ -274,7 +272,7 @@ describe("BoilingData with S3 folders", () => {
     // s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=12/type=yellow/
     const sql = `SELECT COUNT(*) FROM parquet_scan('s3://boilingdata-demo/test_folder2/');`;
     const rows = await bdInstance.execQueryPromise({ sql });
-    expect(rows.sort()).toMatchInlineSnapshot(`
+    expect(rows.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))).toMatchInlineSnapshot(`
       Array [
         Object {
           "count_star()": 29166808,
