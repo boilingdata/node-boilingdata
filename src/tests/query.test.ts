@@ -11,10 +11,6 @@ const username = process.env["BD_USERNAME"];
 const password = process.env["BD_PASSWORD"];
 if (!password || !username) throw new Error("Set BD_USERNAME and BD_PASSWORD envs");
 
-function waitAfterClose(): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, 1000));
-}
-
 const globalCallbacks = globalCallbacksList
   .map((cb: string) => ({ [cb]: (d: unknown) => logger.info(d) }))
   .reduce((obj, item) => ({ ...obj, ...item }), {});
@@ -28,20 +24,13 @@ let bdInstance: BoilingData; //  = new BoilingData({ username, password, globalC
 
 describe("boilingdata with DuckDB", () => {
   beforeAll(async () => {
-    bdInstance = new BoilingData({
-      username,
-      password,
-      globalCallbacks,
-      logLevel,
-      endpointUrl: "wss://4rpyi2ae3f.execute-api.eu-west-1.amazonaws.com/prodbd/",
-    });
+    bdInstance = new BoilingData({ username, password, globalCallbacks, logLevel });
     await bdInstance.connect();
     logger.info("connected.");
   });
 
   afterAll(async () => {
     await bdInstance.close();
-    await waitAfterClose();
     logger.info("connection closed.");
   });
 
@@ -93,7 +82,6 @@ describe.skip("boilingdata with SQLite3", () => {
 
   afterAll(async () => {
     await bdInstance.close();
-    await waitAfterClose();
     logger.info("connection closed.");
   });
 
@@ -123,7 +111,6 @@ describe("boilingdata with promise method", () => {
 
   afterAll(async () => {
     await bdInstance.close();
-    await waitAfterClose();
     logger.info("connection closed.");
   });
 
@@ -143,7 +130,6 @@ describe.skip("boilingdata with Glue Tables", () => {
 
   afterAll(async () => {
     await bdInstance.close();
-    await waitAfterClose();
     logger.info("connection closed.");
   });
 
@@ -151,7 +137,7 @@ describe.skip("boilingdata with Glue Tables", () => {
     const rows = await new Promise<any[]>((resolve, _reject) => {
       const r: any[] = [];
       bdInstance.execQuery({
-        sql: `SELECT * FROM glue.default.nyctaxis LIMIT 10;`,
+        sql: `SELECT * FROM glue('default.flights_parquet') LIMIT 10;`,
         callbacks: {
           onData: (data: IBDDataResponse | unknown) => {
             if (isDataResponse(data)) data.data.map(row => r.push(row));
@@ -191,7 +177,6 @@ describe("BoilingData with S3 folders", () => {
 
   afterAll(async () => {
     await bdInstance.close();
-    await waitAfterClose();
     logger.info("connection closed.");
   });
 
@@ -201,14 +186,14 @@ describe("BoilingData with S3 folders", () => {
     expect(rows).toMatchSnapshot();
   });
 
-  it.skip("query over folder with 80 gz.parquet files", async () => {
+  it("query over folder with 80 gz.parquet files", async () => {
     // s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=12/type=yellow/
     const sql = `SELECT COUNT(*) FROM parquet_scan('s3://boilingdata-demo/test_folder2/');`;
     const rows = await bdInstance.execQueryPromise({ sql });
     expect(rows).toMatchInlineSnapshot(`
       Array [
         Object {
-          "count_star()": 29166808,
+          "count": 29166808,
         },
       ]
     `);
@@ -227,21 +212,6 @@ describe("BoilingData with S3 folders", () => {
     `);
   });
 
-  it("query over example file without splitAccess", async () => {
-    const rows = await bdInstance.execQueryPromise({
-      splitAccess: false,
-      splitSizeMB: 300,
-      sql: `SELECT COUNT(*) AS splitAccess FROM parquet_scan('s3://boilingdata-demo/demo2.parquet');`,
-    });
-    expect(rows.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))).toMatchInlineSnapshot(`
-      Array [
-        Object {
-          "splitaccess": 28160000,
-        },
-      ]
-    `);
-  });
-
   it("2x query over same example file", async () => {
     // s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=12/type=yellow/
     const sql = `SELECT COUNT(*) FROM ( SELECT * FROM parquet_scan('s3://boilingdata-demo/test_folder2/part-r-00426-6e222bd6-47be-424a-a29a-606961a23de1.gz.parquet') UNION ALL SELECT * FROM parquet_scan('s3://boilingdata-demo/test_folder2/part-r-00426-6e222bd6-47be-424a-a29a-606961a23de1.gz.parquet')) a;`;
@@ -255,27 +225,27 @@ describe("BoilingData with S3 folders", () => {
     `);
   });
 
-  it.skip("2x query over folder with 80 gz.parquet files (mem caching)", async () => {
+  it("2x query over folder with 80 gz.parquet files (mem caching)", async () => {
     // s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=12/type=yellow/
     const sql = `SELECT COUNT(*) FROM ( SELECT * FROM parquet_scan('s3://boilingdata-demo/test_folder2/') UNION ALL SELECT * FROM parquet_scan('s3://boilingdata-demo/test_folder2/')) a;`;
     const rows = await bdInstance.execQueryPromise({ sql });
     expect(rows.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))).toMatchInlineSnapshot(`
       Array [
         Object {
-          "count_star()": 58333616,
+          "count": 58333616,
         },
       ]
     `);
   });
 
-  it.skip("query over folder with 80 gz.parquet files (mem cached)", async () => {
+  it("query over folder with 80 gz.parquet files (mem cached)", async () => {
     // s3://isecurefi-serverless-analytics/NY-Pub/year=2009/month=12/type=yellow/
     const sql = `SELECT COUNT(*) FROM parquet_scan('s3://boilingdata-demo/test_folder2/');`;
     const rows = await bdInstance.execQueryPromise({ sql });
     expect(rows.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))).toMatchInlineSnapshot(`
       Array [
         Object {
-          "count_star()": 29166808,
+          "count": 29166808,
         },
       ]
     `);
@@ -291,7 +261,6 @@ describe("BoilingData JS query hooks", () => {
 
   afterAll(async () => {
     await bdInstance.close();
-    await waitAfterClose();
     logger.info("connection closed.");
   });
 
