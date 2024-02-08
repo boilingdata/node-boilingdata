@@ -132,6 +132,7 @@ export class BoilingData {
   private creds?: BDCredentials;
   private socketInstance: ISocketInstance;
   private logger: Console;
+  private closedPromise?: Promise<void>;
 
   constructor(public props: IBoilingData) {
     this.logger = createLogger({ name: "boilingdata", logLevel: this.props.logLevel ?? "info" });
@@ -173,43 +174,47 @@ export class BoilingData {
 
   public async close(): Promise<void> {
     this.socketInstance.socket?.close(1000);
+    if (this.closedPromise) await this.closedPromise;
   }
 
   public async connect(): Promise<void> {
     return new Promise((resolve, reject) => {
       const sock = this.socketInstance;
       const cbs = this.props.globalCallbacks;
-      getBoilingDataCredentials(
-        this.props.username,
-        this.props.password,
-        this.region,
-        this.props.endpointUrl,
-        this.props.mfa,
-        this.props.authcontext,
-        this.logger,
-      )
-        .then(creds => {
-          this.creds = creds;
-          sock.socket = new WebSocket(this.creds.signedWebsocketUrl);
-          sock.socket!.onclose = () => {
-            if (cbs?.onSocketClose) cbs.onSocketClose();
-          };
-          sock.socket!.onopen = () => {
-            if (cbs?.onSocketOpen) cbs.onSocketOpen();
-            resolve();
-          };
-          sock.socket!.onerror = (err: any) => {
-            this.logger.error(err);
+      this.closedPromise = new Promise<void>(closeResolve => {
+        getBoilingDataCredentials(
+          this.props.username,
+          this.props.password,
+          this.region,
+          this.props.endpointUrl,
+          this.props.mfa,
+          this.props.authcontext,
+          this.logger,
+        )
+          .then(creds => {
+            this.creds = creds;
+            sock.socket = new WebSocket(this.creds.signedWebsocketUrl);
+            sock.socket!.onclose = () => {
+              if (cbs?.onSocketClose) cbs.onSocketClose();
+              closeResolve();
+            };
+            sock.socket!.onopen = () => {
+              if (cbs?.onSocketOpen) cbs.onSocketOpen();
+              resolve();
+            };
+            sock.socket!.onerror = (err: any) => {
+              this.logger.error(err);
+              reject(err);
+            };
+            sock.socket!.onmessage = (msg: MessageEvent) => {
+              return this.handleSocketMessage(msg);
+            };
+          })
+          .catch(err => {
+            console.error(err);
             reject(err);
-          };
-          sock.socket!.onmessage = (msg: MessageEvent) => {
-            return this.handleSocketMessage(msg);
-          };
-        })
-        .catch(err => {
-          console.error(err);
-          reject(err);
-        });
+          });
+      });
     });
   }
 

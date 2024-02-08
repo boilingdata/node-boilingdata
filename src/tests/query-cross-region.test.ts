@@ -1,5 +1,5 @@
-import { EEngineTypes, globalCallbacksList, IBDDataResponse } from "../boilingdata/boilingdata.api";
-import { BDAWSRegion, BoilingData, IJsHooks, isDataResponse } from "../boilingdata/boilingdata";
+import { globalCallbacksList } from "../boilingdata/boilingdata.api";
+import { BDAWSRegion, BoilingData } from "../boilingdata/boilingdata";
 
 const createLogger = (_props: any): Console => console;
 
@@ -22,98 +22,92 @@ globalCallbacks.onSocketClose = () => {
   logger.info("socket closed");
   return undefined;
 };
+const regions: BDAWSRegion[] = [
+  "eu-west-1",
+  "eu-north-1",
+  // // "eu-west-2",
+  // // "eu-west-3",
+  // // "eu-south-1",
+  // // "eu-central-1",
+  // // "us-east-1",
+  // // "us-east-2",
+  // // "us-west-1",
+  "us-west-2",
+  // // "ca-central-1",
+];
 
-describe.skip("BD can switch the WebSocket connection endpoint dynamically", () => {
-  it("run single query from 2 different regions", async () => {
+describe("BD can switch the WebSocket connection endpoint dynamically", () => {
+  it("run single query from 3 different supported regions", async () => {
     const expected = [
       {
-        DOLocationID: 145,
-        PULocationID: 145,
-        RatecodeID: 1,
+        DOLocationID: 1,
+        PULocationID: 1,
+        RatecodeID: 5,
         VendorID: 1,
         congestion_surcharge: 0,
-        extra: 0.5,
-        fare_amount: 3,
+        extra: 0,
+        fare_amount: 121,
         improvement_surcharge: 0.3,
-        mta_tax: 0.5,
-        passenger_count: 1,
-        payment_type: 2,
+        mta_tax: 0,
+        passenger_count: 2,
+        payment_type: 1,
         store_and_fwd_flag: "N",
         tip_amount: 0,
         tolls_amount: 0,
-        total_amount: 4.3,
-        tpep_dropoff_datetime: 1556669808000,
-        tpep_pickup_datetime: 1556669690000,
+        total_amount: 121.3,
+        tpep_dropoff_datetime: 1551410222000,
+        tpep_pickup_datetime: 1551410199000,
         trip_distance: 0,
       },
       {
-        DOLocationID: 145,
-        PULocationID: 145,
-        RatecodeID: 1,
+        DOLocationID: 1,
+        PULocationID: 1,
+        RatecodeID: 5,
         VendorID: 1,
         congestion_surcharge: 0,
-        extra: 0.5,
-        fare_amount: 3,
+        extra: 0,
+        fare_amount: 110,
         improvement_surcharge: 0.3,
-        mta_tax: 0.5,
+        mta_tax: 0,
         passenger_count: 1,
-        payment_type: 2,
+        payment_type: 1,
         store_and_fwd_flag: "N",
-        tip_amount: 0,
+        tip_amount: 10,
         tolls_amount: 0,
-        total_amount: 4.3,
-        tpep_dropoff_datetime: 1556671047000,
-        tpep_pickup_datetime: 1556670954000,
-        trip_distance: 1.5,
+        total_amount: 120.3,
+        tpep_dropoff_datetime: 1551415659000,
+        tpep_pickup_datetime: 1551415597000,
+        trip_distance: 18.4,
       },
     ];
-    let bd = new BoilingData({
-      username,
-      password,
-      globalCallbacks,
-      logLevel,
-      region: "eu-west-1",
-    });
-    await bd.connect();
-    const sql = `SELECT * FROM parquet_scan('s3://boilingdata-demo/demo2.parquet') LIMIT 2;`;
-    let rows = await bd.execQueryPromise({ sql });
-    expect(rows.sort()).toEqual(expected);
-    await bd.close();
-    // New connection from different region, web socket endpoint changes (like ConnectionId too).
-    // But the bucket is still in eu-west-1 and the request is routed there to the same Lambda.
-    bd = new BoilingData({
-      username,
-      password,
-      globalCallbacks,
-      logLevel,
-      region: "eu-north-1",
-    });
-    await bd.connect();
-    rows = await bd.execQueryPromise({ sql });
-    expect(rows.sort()).toEqual(expected);
-    await bd.close();
+
+    // Run all queries in parallel
+    await Promise.all(
+      regions.map(async region => {
+        const sql = `SELECT * FROM parquet_scan('s3://boilingdata-demo/demo2.parquet') ORDER BY DOLocationID, PULocationID, tpep_dropoff_datetime, tpep_pickup_datetime, trip_distance LIMIT 2;`;
+        const bd = new BoilingData({
+          username,
+          password,
+          globalCallbacks,
+          logLevel,
+          region,
+        });
+        await bd.connect();
+        // The JSON is bigint JSON, thus converting back to "normal", to get Object properties inherited, like toString()
+        const rows = JSON.parse(JSON.stringify(await bd.execQueryPromise({ sql })));
+        expect(rows.sort()).toEqual(expected);
+        await bd.close();
+      }),
+    );
   });
 });
 
-describe.skip("BoilingData in all North-America and Europe AWS Regions", () => {
-  const regions: BDAWSRegion[] = [
-    "eu-west-1",
-    "eu-north-1",
-    "eu-west-2",
-    "eu-west-3",
-    "eu-south-1",
-    "eu-central-1",
-    "us-east-1",
-    "us-east-2",
-    "us-west-1",
-    "us-west-2",
-    "ca-central-1",
-  ];
-
+describe("BoilingData in all North-America and Europe AWS Regions", () => {
   it("runs query succesfully in other regions too", async () => {
-    const rows: any[] = [];
+    // Run all in parallel
     await Promise.all(
       regions.map(async region => {
+        const rows: any[] = [];
         const bdInstance = new BoilingData({
           username,
           password,
@@ -128,121 +122,10 @@ describe.skip("BoilingData in all North-America and Europe AWS Regions", () => {
         rows.push(await bdInstance.execQueryPromise({ sql }));
         await bdInstance.close();
         logger.info(`connection closed to region ${region}`);
+        const sorted = rows.sort();
+        console.log(sorted);
+        expect(sorted).toMatchSnapshot();
       }),
     );
-    const sorted = rows.sort();
-    console.log(sorted);
-    expect(sorted).toMatchSnapshot();
-  });
-
-  it("can query cross-region", async () => {
-    const bdInstance = new BoilingData({
-      username,
-      password,
-      globalCallbacks,
-      logLevel,
-    });
-    await bdInstance.connect();
-    const allTestFiles = [
-      "s3://boilingdata-demo/test.parquet",
-      "s3://eu-west-2-boilingdata-demo/test.parquet",
-      "s3://eu-west-3-boilingdata-demo/test.parquet",
-      "s3://eu-north-1-boilingdata-demo/test.parquet",
-      "s3://eu-south-1-boilingdata-demo/test.parquet",
-      "s3://eu-central-1-boilingdata-demo/test.parquet",
-      "s3://us-east-1-boilingdata-demo/test.parquet",
-      "s3://us-east-2-boilingdata-demo/test.parquet",
-      "s3://us-west-1-boilingdata-demo/test.parquet",
-      "s3://us-west-2-boilingdata-demo/test.parquet",
-      "s3://ca-central-1-boilingdata-demo/test.parquet",
-    ];
-    const totalCount = allTestFiles.length;
-    const rows: any[] = [];
-    while (allTestFiles.length) {
-      const batch = allTestFiles.splice(0, 5);
-      console.log(totalCount, batch);
-      const batchArray = `ARRAY[${batch.map(k => `'${k}'`).join(",")}]`;
-      const sql = `SELECT * FROM parquet_scan(${batchArray}) LIMIT 1;`;
-      const newRows = await bdInstance.execQueryPromise({ sql });
-      rows.push(...newRows);
-    }
-    const sorted = rows.sort((a, b) => a.key.localeCompare(b.key));
-    console.log(sorted);
-    expect(sorted).toMatchSnapshot();
-
-    await bdInstance.close();
-    logger.info(`connection closed`);
-  });
-});
-
-describe.skip("BD can switch the WebSocket connection endpoint dynamically", () => {
-  it("run single query from 2 different regions", async () => {
-    const expected = [
-      {
-        DOLocationID: 145,
-        PULocationID: 145,
-        RatecodeID: 1,
-        VendorID: 1,
-        congestion_surcharge: 0,
-        extra: 0.5,
-        fare_amount: 3,
-        improvement_surcharge: 0.3,
-        mta_tax: 0.5,
-        passenger_count: 1,
-        payment_type: 2,
-        store_and_fwd_flag: "N",
-        tip_amount: 0,
-        tolls_amount: 0,
-        total_amount: 4.3,
-        tpep_dropoff_datetime: 1556669808000,
-        tpep_pickup_datetime: 1556669690000,
-        trip_distance: 0,
-      },
-      {
-        DOLocationID: 145,
-        PULocationID: 145,
-        RatecodeID: 1,
-        VendorID: 1,
-        congestion_surcharge: 0,
-        extra: 0.5,
-        fare_amount: 3,
-        improvement_surcharge: 0.3,
-        mta_tax: 0.5,
-        passenger_count: 1,
-        payment_type: 2,
-        store_and_fwd_flag: "N",
-        tip_amount: 0,
-        tolls_amount: 0,
-        total_amount: 4.3,
-        tpep_dropoff_datetime: 1556671047000,
-        tpep_pickup_datetime: 1556670954000,
-        trip_distance: 1.5,
-      },
-    ];
-    let bd = new BoilingData({
-      username,
-      password,
-      globalCallbacks,
-      logLevel,
-      region: "eu-west-1",
-    });
-    await bd.connect();
-    const sql = `SELECT * FROM parquet_scan('s3://boilingdata-demo/demo2.parquet') LIMIT 2;`;
-    let rows = await bd.execQueryPromise({ sql });
-    expect(rows.sort()).toEqual(expected);
-    await bd.close();
-    // New connection from different region, web socket endpoint changes (like ConnectionId too).
-    // But the bucket is still in eu-west-1 and the request is routed there to the same Lambda.
-    bd = new BoilingData({
-      username,
-      password,
-      globalCallbacks,
-      logLevel,
-      region: "eu-north-1",
-    });
-    await bd.connect();
-    rows = await bd.execQueryPromise({ sql });
-    expect(rows.sort()).toEqual(expected);
-    await bd.close();
   });
 });
