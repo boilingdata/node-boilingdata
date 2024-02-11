@@ -13,6 +13,27 @@ You can use this SDK both on browser and with NodeJS.
 yarn add @boilingdata/node-boilingdata
 ```
 
+## Browser
+
+Copy and add `browser/boilingdata.min.js` script to your HTML.
+
+```html
+<script src="boilingdata.min.js"></script>
+<script>
+  const bdInstance = new BoilingData({ username: "myUsername", password: "myPw" });
+  let isConnected = false;
+  async function connectAndRunQuery() {
+    if (!isConnected) {
+      await bdInstance.connect();
+      isConnected = true;
+    }
+    const rows = await bdInstance.execQueryPromise({ sql: "SELECT 42;" });
+    console.log({ rows });
+  }
+  connectAndRunQuery();
+</script>
+```
+
 ## Basic Examples
 
 `execQueryPromise()` method can be used to await for the results directly.
