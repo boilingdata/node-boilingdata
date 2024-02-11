@@ -7,7 +7,7 @@
     "plugin:@typescript-eslint/eslint-recommended",
     "plugin:@typescript-eslint/recommended"
   ],
-  "ignorePatterns": ["**/tests/*.ts"],
+  "ignorePatterns": ["**/tests/*.ts", "webpack.config.js"],
   "rules": {
     "@typescript-eslint/no-unused-vars": [
       "error",
