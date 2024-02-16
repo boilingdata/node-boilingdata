@@ -20,6 +20,7 @@ const Pool = new CognitoUserPool(poolData);
 export interface BDCredentials {
   cognitoUsername: string;
   signedWebsocketUrl: string;
+  idToken: any;
 }
 
 function getIdToken(Username: string, Password: string, mfa?: number, logger?: Console): Promise<CognitoIdToken> {
@@ -108,7 +109,7 @@ export async function getBoilingDataCredentials(
       endpointUrl ? getEndpointUrlPath(endpointUrl) : "",
     );
     const cognitoUsername = idToken.decodePayload()["cognito:username"];
-    return { cognitoUsername, signedWebsocketUrl };
+    return { cognitoUsername, signedWebsocketUrl, idToken };
   } catch (err) {
     console.error(err);
     throw err;

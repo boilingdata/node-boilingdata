@@ -177,6 +177,10 @@ export class BoilingData {
     if (this.closedPromise) await this.closedPromise;
   }
 
+  public getCachedAuthContext(): { idToken: any } | undefined {
+    return this.creds?.idToken;
+  }
+
   public async connect(): Promise<void> {
     return new Promise((resolve, reject) => {
       const sock = this.socketInstance;
