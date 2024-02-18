@@ -17,6 +17,7 @@ export interface IBDCallbacks {
   onLambdaEvent?: (data: unknown) => void;
   onSocketOpen?: () => void;
   onSocketClose?: () => void;
+  onSocketError?: (err: unknown) => void;
   unknown?: (data: unknown) => void;
 }
 
@@ -133,6 +134,7 @@ export class BoilingData {
   private socketInstance: ISocketInstance;
   private logger: Console;
   private closedPromise?: Promise<void>;
+  private authcontext!: any;
 
   constructor(public props: IBoilingData) {
     this.logger = createLogger({ name: "boilingdata", logLevel: this.props.logLevel ?? "info" });
@@ -178,7 +180,7 @@ export class BoilingData {
   }
 
   public getCachedAuthContext(): { idToken: any } | undefined {
-    return this.creds?.idToken;
+    return this.authcontext;
   }
 
   public async connect(): Promise<void> {
@@ -192,11 +194,12 @@ export class BoilingData {
           this.region,
           this.props.endpointUrl,
           this.props.mfa,
-          this.props.authcontext,
+          this.authcontext ?? this.props.authcontext, // this.authcontext is more fresh
           this.logger,
         )
           .then(creds => {
             this.creds = creds;
+            this.authcontext = creds.idToken;
             sock.socket = new WebSocket(this.creds.signedWebsocketUrl);
             sock.socket!.onclose = () => {
               if (cbs?.onSocketClose) cbs.onSocketClose();
@@ -206,8 +209,10 @@ export class BoilingData {
               if (cbs?.onSocketOpen) cbs.onSocketOpen();
               resolve();
             };
-            sock.socket!.onerror = (err: any) => {
+            sock.socket!.onerror = (err: unknown) => {
               this.logger.error(err);
+              this.authcontext = undefined; // reset auth context
+              if (cbs?.onSocketError) cbs.onSocketError(err);
               reject(err);
             };
             sock.socket!.onmessage = (msg: MessageEvent) => {

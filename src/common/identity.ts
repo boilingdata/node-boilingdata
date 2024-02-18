@@ -95,9 +95,12 @@ export async function getBoilingDataCredentials(
     } else if (authContext && authContext.idToken?.jwtToken) {
       logger?.debug("Using existing ID token");
       idToken = new CognitoIdToken({ IdToken: authContext.idToken?.jwtToken });
+    } else {
+      throw new Error("No credentials for creating signed WS URL");
     }
-    if (!idToken) throw new Error("No credentials for creating signed WS URL");
+    if (!idToken) throw new Error("Failed using existing auth context");
     const creds = await refreshCredsWithToken(idToken.getJwtToken());
+    if (!creds) throw new Error("Failed refreshing credentials");
     const { accessKeyId, secretAccessKey, sessionToken } = creds;
     if (!accessKeyId || !secretAccessKey) throw new Error("Missing credentials (after refresh)!");
     const credentials = { accessKeyId, secretAccessKey, sessionToken };
