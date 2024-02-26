@@ -38,6 +38,12 @@ Copy and add `browser/boilingdata.min.js` script to your HTML.
 
 `execQueryPromise()` method can be used to await for the results directly.
 
+```shell
+yarn install @boilingdata/node-boilingdata
+# copy paste the example to example.mjs file.
+BD_USERNAME=<yourBoilingEmail> BD_PASSWORD=<yourBoilingPw> node example.mjs
+```
+
 ```typescript
 import { BoilingData } from "@boilingdata/node-boilingdata";
 
@@ -46,9 +52,11 @@ async function main() {
   await bdInstance.connect();
   const sql = `SELECT COUNT(*) FROM parquet_scan('s3://boilingdata-demo/demo.parquet');`;
   const rows = await bdInstance.execQueryPromise({ sql });
-  console.log(rows);
+  console.log(JSON.parse(JSON.stringify(rows)));
   await bdInstance.close();
 }
+
+main();
 ```
 
 `execQuery()` uses callbacks.
