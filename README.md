@@ -50,9 +50,12 @@ import { BoilingData } from "@boilingdata/node-boilingdata";
 async function main() {
   const bdInstance = new BoilingData({ username: process.env["BD_USERNAME"], password: process.env["BD_PASSWORD"] });
   await bdInstance.connect();
+  const start = Date.now();
   const sql = `SELECT COUNT(*) FROM parquet_scan('s3://boilingdata-demo/demo.parquet');`;
   const rows = await bdInstance.execQueryPromise({ sql });
+  const stop = Date.now();
   console.log(JSON.parse(JSON.stringify(rows)));
+  console.log("Query time measured from this script (ms):", stop - start);
   await bdInstance.close();
 }
 
