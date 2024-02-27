@@ -25,19 +25,19 @@ globalCallbacks.onSocketClose = () => {
 const regions: BDAWSRegion[] = [
   "eu-west-1",
   "eu-north-1",
-  // // "eu-west-2",
-  // // "eu-west-3",
-  // // "eu-south-1",
-  // // "eu-central-1",
-  // // "us-east-1",
-  // // "us-east-2",
-  // // "us-west-1",
+  // "eu-west-2",
+  // "eu-west-3",
+  // "eu-south-1",
+  // "eu-central-1",
+  // "us-east-1",
+  "us-east-2",
+  // "us-west-1",
   "us-west-2",
-  // // "ca-central-1",
+  // "ca-central-1",
 ];
 
 describe("BD can switch the WebSocket connection endpoint dynamically", () => {
-  it("run single query from 3 different supported regions", async () => {
+  it("run single query from 4 different supported regions", async () => {
     const expected = [
       {
         DOLocationID: 1,

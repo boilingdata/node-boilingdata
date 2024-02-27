@@ -179,6 +179,10 @@ export class BoilingData {
     if (this.closedPromise) await this.closedPromise;
   }
 
+  public removeCachedAuthContext(): void {
+    this.authcontext = undefined;
+  }
+
   public getCachedAuthContext(): { idToken: any } | undefined {
     return this.authcontext;
   }
