@@ -12,27 +12,20 @@ const password = process.env["BD_PASSWORD"];
 if (!password || !username) throw new Error("Set BD_USERNAME and BD_PASSWORD envs");
 
 const globalCallbacks = globalCallbacksList
-  .map((cb: string) => ({ [cb]: (d: unknown) => logger.info(d) }))
+  .map((cb: string) => ({
+    [cb]: (d: unknown) => {
+      //logger.info(d);
+    },
+  }))
   .reduce((obj, item) => ({ ...obj, ...item }), {});
-globalCallbacks.onSocketOpen = () => {
-  return undefined;
-};
-globalCallbacks.onSocketClose = () => {
-  return undefined;
-};
-let bdInstance: BoilingData; //  = new BoilingData({ username, password, globalCallbacks, logLevel });
+globalCallbacks.onSocketOpen = () => logger.info("connected.");
+globalCallbacks.onSocketClose = () => logger.info("connection closed.");
 
 describe("boilingdata with DuckDB", () => {
-  beforeAll(async () => {
-    bdInstance = new BoilingData({ username, password, globalCallbacks, logLevel });
-    await bdInstance.connect();
-    logger.info("connected.");
-  });
+  let bdInstance: BoilingData = new BoilingData({ username, password, globalCallbacks, logLevel, region: "eu-west-1" });
 
-  afterAll(async () => {
-    await bdInstance.close();
-    logger.info("connection closed.");
-  });
+  beforeAll(async () => await bdInstance.connect());
+  afterAll(async () => await bdInstance.close());
 
   it("run single query", async () => {
     const sql = `SELECT * FROM parquet_scan('s3://boilingdata-demo/demo2.parquet') ORDER BY VendorID, DOLocationID, PULocationID, RatecodeID, tip_amount, total_amount, trip_distance, tpep_dropoff_datetime LIMIT 2;`;
@@ -73,36 +66,9 @@ describe("boilingdata with DuckDB", () => {
   });
 });
 
-describe.skip("boilingdata with SQLite3", () => {
-  beforeAll(async () => {
-    bdInstance = new BoilingData({ username, password, globalCallbacks, logLevel });
-    await bdInstance.connect();
-    logger.info("connected.");
-  });
-
-  afterAll(async () => {
-    await bdInstance.close();
-    logger.info("connection closed.");
-  });
-
-  it("run single query", async () => {
-    const rows = await bdInstance.execQueryPromise({
-      sql: `SELECT * FROM sqlite('s3://boilingdata-demo/uploads/userdata1.sqlite3','userdata1') LIMIT 2;`,
-      engine: EEngineTypes.SQLITE,
-    });
-    expect(rows.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))).toMatchSnapshot();
-  });
-
-  it("run single query, same one, 2nd time", async () => {
-    const rows = await bdInstance.execQueryPromise({
-      sql: `SELECT * FROM sqlite('s3://boilingdata-demo/uploads/userdata1.sqlite3','userdata1') LIMIT 2;`,
-      engine: EEngineTypes.SQLITE,
-    });
-    expect(rows.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))).toMatchSnapshot();
-  });
-});
-
 describe("boilingdata with promise method", () => {
+  let bdInstance: BoilingData = new BoilingData({ username, password, globalCallbacks, logLevel, region: "eu-west-1" });
+
   beforeAll(async () => {
     bdInstance = new BoilingData({ username, password, globalCallbacks, logLevel });
     await bdInstance.connect();
@@ -121,54 +87,41 @@ describe("boilingdata with promise method", () => {
   });
 });
 
-describe.skip("boilingdata with Glue Tables", () => {
-  beforeAll(async () => {
-    bdInstance = new BoilingData({ username, password, globalCallbacks, logLevel });
-    await bdInstance.connect();
-    logger.info("connected.");
-  });
+describe("boilingdata with Glue Tables", () => {
+  let bdInstance: BoilingData = new BoilingData({ username, password, globalCallbacks, logLevel, region: "eu-west-1" });
 
-  afterAll(async () => {
-    await bdInstance.close();
-    logger.info("connection closed.");
-  });
+  beforeAll(async () => await bdInstance.connect());
+  afterAll(async () => await bdInstance.close());
 
-  it("can read S3 object paths from Glue Table", async () => {
-    const rows = await new Promise<any[]>((resolve, _reject) => {
-      const r: any[] = [];
-      bdInstance.execQuery({
-        sql: `SELECT * FROM glue('default.flights_parquet') LIMIT 10;`,
-        callbacks: {
-          onData: (data: IBDDataResponse | unknown) => {
-            if (isDataResponse(data)) data.data.map(row => r.push(row));
-          },
-          onQueryFinished: () => resolve(r),
-          // onLogError: (data: any) => reject(data),
-        },
-      });
+  it("can do partition filter push down - year", async () => {
+    let rows: any[];
+    rows = await bdInstance.execQueryPromise({
+      sql: `SELECT COUNT(*) AS count FROM glue('default.flights_parquet') WHERE year=1987;`,
     });
-    expect(rows.sort((a, b) => a.s3key.localeCompare(b.s3key))).toMatchSnapshot();
+    console.log(JSON.parse(JSON.stringify(rows)));
+    expect(rows[0]?.count).toEqual(1311826);
   });
-
-  it("can do partition filter push down", async () => {
-    const rows = await new Promise<any[]>((resolve, _reject) => {
-      const r: any[] = [];
-      bdInstance.execQuery({
-        sql: `SELECT * FROM glue.default.nyctaxis WHERE year=2009 AND month=8 LIMIT 10;`,
-        callbacks: {
-          onData: (data: IBDDataResponse | unknown) => {
-            if (isDataResponse(data)) data.data.map(row => r.push(row));
-          },
-          onQueryFinished: () => resolve(r),
-          // onLogError: (data: any) => reject(data),
-        },
-      });
+  it("can do partition filter push down - year and month", async () => {
+    let rows: any[];
+    rows = await bdInstance.execQueryPromise({
+      sql: `SELECT COUNT(*) AS count FROM glue('default.flights_parquet') WHERE year=2009 AND month=8;`,
     });
-    expect(rows.sort((a, b) => a.s3key.localeCompare(b.s3key))).toMatchSnapshot();
+    console.log(JSON.parse(JSON.stringify(rows)));
+    expect(rows[0]?.count).toEqual(568301);
+  });
+  it("can do partition filter push down - range", async () => {
+    let rows: any[];
+    rows = await bdInstance.execQueryPromise({
+      sql: `SELECT COUNT(*) AS count FROM glue('default.flights_parquet') WHERE year=2015 AND month>=3 AND month<=11;`,
+    });
+    console.log(JSON.parse(JSON.stringify(rows)));
+    expect(rows[0]?.count).toEqual(4440690);
   });
 });
 
 describe("BoilingData with S3 folders", () => {
+  let bdInstance: BoilingData = new BoilingData({ username, password, globalCallbacks, logLevel, region: "eu-west-1" });
+
   beforeAll(async () => {
     bdInstance = new BoilingData({ username, password, globalCallbacks, logLevel });
     await bdInstance.connect();
@@ -253,6 +206,8 @@ describe("BoilingData with S3 folders", () => {
 });
 
 describe("BoilingData JS query hooks", () => {
+  let bdInstance: BoilingData = new BoilingData({ username, password, globalCallbacks, logLevel, region: "eu-west-1" });
+
   beforeAll(async () => {
     bdInstance = new BoilingData({ username, password, globalCallbacks, logLevel });
     await bdInstance.connect();

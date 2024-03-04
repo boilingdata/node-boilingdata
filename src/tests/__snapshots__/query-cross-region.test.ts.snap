@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`BoilingData in all North-America and Europe AWS Regions runs query succesfully in other regions too 1`] = `
+exports[`BD can switch the WebSocket connection endpoint dynamically run a local query in all supported regions 1`] = `
 Array [
   Array [
     Object {
@@ -22,7 +22,7 @@ Array [
 ]
 `;
 
-exports[`BoilingData in all North-America and Europe AWS Regions runs query succesfully in other regions too 2`] = `
+exports[`BD can switch the WebSocket connection endpoint dynamically run a local query in all supported regions 2`] = `
 Array [
   Array [
     Object {
@@ -44,7 +44,7 @@ Array [
 ]
 `;
 
-exports[`BoilingData in all North-America and Europe AWS Regions runs query succesfully in other regions too 3`] = `
+exports[`BD can switch the WebSocket connection endpoint dynamically run a local query in all supported regions 3`] = `
 Array [
   Array [
     Object {
@@ -66,7 +66,7 @@ Array [
 ]
 `;
 
-exports[`BoilingData in all North-America and Europe AWS Regions runs query succesfully in other regions too 4`] = `
+exports[`BD can switch the WebSocket connection endpoint dynamically run a local query in all supported regions 4`] = `
 Array [
   Array [
     Object {
