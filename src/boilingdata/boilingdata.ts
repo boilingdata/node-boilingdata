@@ -1,4 +1,4 @@
-import { BDCredentials, getBoilingDataCredentials } from "../common/identity";
+import { BDCredentials, getBoilingDataCredentials, getIdToken } from "../common/identity";
 import { EEngineTypes, EEvent, EMessageTypes, IBDDataQuery, IBDDataResponse } from "./boilingdata.api";
 import { v4 as uuidv4 } from "uuid";
 import WebSocket from "isomorphic-ws";
@@ -128,6 +128,23 @@ export function isDataResponse(data: IBDDataResponse | unknown): data is IBDData
   return (data as IBDDataResponse).messageType !== undefined && (data as IBDDataResponse).messageType === "DATA";
 }
 
+// FIXME: Make org specific
+export const apiKey = "Ak7itOEG1N1I7XpFfmYO97NWHRZwEYDmYBL4y0lb";
+
+export function getApiKey(): Promise<string> {
+  return Promise.resolve(apiKey); // FIXME: Get API key..
+}
+
+export async function getReqHeaders(token: string): Promise<{ [k: string]: string }> {
+  const apikey = await getApiKey();
+  return {
+    Authorization: token,
+    "x-api-key": apikey,
+    "Content-Type": "application/json",
+    Accept: "application/json",
+  };
+}
+
 export class BoilingData {
   private region: BDAWSRegion;
   private creds?: BDCredentials;
@@ -135,6 +152,7 @@ export class BoilingData {
   private logger: Console;
   private closedPromise?: Promise<void>;
   private authcontext!: any;
+  private cognitoIdToken!: string;
 
   constructor(public props: IBoilingData) {
     this.logger = createLogger({ name: "boilingdata", logLevel: this.props.logLevel ?? "info" });
@@ -185,6 +203,32 @@ export class BoilingData {
 
   public getCachedAuthContext(): { idToken: any } | undefined {
     return this.authcontext;
+  }
+
+  public async getTapClientToken(tokenLifetime = "12h", sharingUser?: string): Promise<string> {
+    if (this.authcontext?.idToken) {
+      this.cognitoIdToken = this.authcontext.idToken;
+    } else if (this.props.username && this.props.password) {
+      this.cognitoIdToken = (await getIdToken(this.props.username, this.props.password)).getJwtToken();
+    }
+    const headers = await getReqHeaders(this.cognitoIdToken); // , { tokenLifetime, vendingSchedule, shareId });
+    const method = "POST";
+    const tapTokenUrl = "https://rest.api.test.boilingdata.com/taptoken";
+    const body = JSON.stringify({ tokenLifetime, sharingUser });
+    this.logger.debug({ method, tapTokenUrl, headers, body });
+    const res = await fetch(tapTokenUrl, { method, headers, body });
+    const resBody = await res.json();
+    this.logger.debug({ getTapToken: { body: resBody } });
+    if (!resBody.ResponseCode || !resBody.ResponseText) {
+      throw new Error("Malformed response from BD API");
+    }
+    if (resBody.ResponseCode != "00") {
+      throw new Error(`Failed to fetch token: ${resBody.ResponseText}`);
+    }
+    if (!resBody.bdTapToken) {
+      throw new Error("Missing bdStsToken in BD API Response");
+    }
+    return resBody.bdTapToken;
   }
 
   public async connect(): Promise<void> {

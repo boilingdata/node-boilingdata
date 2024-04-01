@@ -23,7 +23,12 @@ export interface BDCredentials {
   idToken: any;
 }
 
-function getIdToken(Username: string, Password: string, mfa?: number, logger?: Console): Promise<CognitoIdToken> {
+export function getIdToken(
+  Username: string,
+  Password: string,
+  mfa?: number,
+  logger?: Console,
+): Promise<CognitoIdToken> {
   return new Promise((resolve, reject) => {
     try {
       const loginDetails = { Username, Password };

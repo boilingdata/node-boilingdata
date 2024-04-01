@@ -89,6 +89,14 @@ async function main() {
 }
 ```
 
+`getTapClientToken()` method can be used to fetch [Data Taps client token](https://www.taps.boilingdata.com/). You need fresh token when sending data to a Data Tap shared to you (or with your own Data Tap too). This API call does not require `connect()` method to be called as the request goes through via REST API rather than WebSocket API.
+
+```typescript
+const bdInstance = new BoilingData({ username: process.env["BD_USERNAME"], password: process.env["BD_PASSWORD"] });
+// first argument is token lifetime, max "24h", 2nd argument is the sharing user (unless your own Tap). Both arguments are optional.
+const tapClientToken = await bdInstance.getTapClientToken("24h", "dforsber@gmail.com");
+```
+
 This repository contains JS/TS BoilingData client SDK that can be used both with NodeJS and in browser. Please see the integration tests on `tests/query.test.ts` for for more examples.
 
 ### Callbacks
