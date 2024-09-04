@@ -421,18 +421,22 @@ export class BoilingData {
     if (!message.requestId || !message.batchSerial || !message.totalBatches || message.batchSerial <= 0) return;
     const queryInfo = this.socketInstance.queries.get(message?.requestId);
     if (!queryInfo) return;
-    queryInfo.receivedBatches.add(message.batchSerial);
-    // split bath check (optional, parent is batchSerial)
-    if (message.splitSerial && message.totalSplitSerials) {
-      if (!queryInfo.receivedSplitBatches.has(message.batchSerial)) {
-        queryInfo.receivedSplitBatches.set(message.batchSerial, new Set());
-      }
-      const receivedSplitSerials = queryInfo.receivedSplitBatches.get(message.batchSerial);
-      if (receivedSplitSerials) {
-        receivedSplitSerials.add(message.splitSerial);
-        if (receivedSplitSerials.size < message.totalSplitSerials) return;
-      }
-    }
+
+    // console.log(
+    //   "batch",
+    //   message?.batchSerial,
+    //   "/",
+    //   message?.totalBatches,
+    //   "split",
+    //   message?.splitSerial,
+    //   "/",
+    //   message.totalSplitSerials,
+    //   "sub-batch",
+    //   message?.subBatchSerial,
+    //   "/",
+    //   message?.totalSubBatches,
+    // );
+
     // sub batch check (optional, parent is splitSerial if exists, otherwise batchSerial)
     const parentBatchSerial =
       message.splitSerial && message.totalSplitSerials ? message.splitSerial : message.batchSerial;
@@ -444,6 +448,53 @@ export class BoilingData {
       if (receivedSubBatches) {
         receivedSubBatches.add(message.subBatchSerial);
         if (receivedSubBatches.size < message.totalSubBatches) return;
+        // --- SPLIT READY ---
+        // console.log(
+        //   "BATCH/SPLIT READY",
+        //   message.splitSerial ?? message.batchSerial,
+        //   "/",
+        //   message.totalSplitSerials ?? message.totalBatches,
+        // );
+        // split batch check (optional, parent is batchSerial)
+        if (message.splitSerial && message.totalSplitSerials) {
+          if (!queryInfo.receivedSplitBatches.has(message.batchSerial)) {
+            queryInfo.receivedSplitBatches.set(message.batchSerial, new Set());
+          }
+          const receivedSplitSerials = queryInfo.receivedSplitBatches.get(message.batchSerial);
+          if (receivedSplitSerials) {
+            receivedSplitSerials.add(message.splitSerial);
+            if (receivedSplitSerials.size < message.totalSplitSerials) return;
+            // --- BATCH READY ---
+            // console.log("BATCH READY", message.batchSerial, "/", message.totalBatches);
+            // Only when we have all splits for the batch, mark batch ready
+            queryInfo.receivedBatches.add(message.batchSerial);
+          }
+        } else {
+          // --- BATCH READY ---
+          // console.log("BATCH READY", message.batchSerial, "/", message.totalBatches);
+          // if no splitSerials, then mark the batch ready
+          queryInfo.receivedBatches.add(message.batchSerial);
+        }
+      }
+    } else {
+      if (message.splitSerial && message.totalSplitSerials) {
+        if (!queryInfo.receivedSplitBatches.has(message.batchSerial)) {
+          queryInfo.receivedSplitBatches.set(message.batchSerial, new Set());
+        }
+        const receivedSplitSerials = queryInfo.receivedSplitBatches.get(message.batchSerial);
+        if (receivedSplitSerials) {
+          receivedSplitSerials.add(message.splitSerial);
+          if (receivedSplitSerials.size < message.totalSplitSerials) return;
+          // Only when we have all splits for the batch, mark batch ready
+          // --- BATCH READY ---
+          // console.log("BATCH READY", message.batchSerial, "/", message.totalBatches);
+          queryInfo.receivedBatches.add(message.batchSerial);
+        }
+      } else {
+        // if no splitSerials, then mark the batch ready
+        // --- BATCH READY ---
+        // console.log("BATCH READY", message.batchSerial, "/", message.totalBatches);
+        queryInfo.receivedBatches.add(message.batchSerial);
       }
     }
     if (queryInfo.receivedBatches.size < message.totalBatches) return;

@@ -87,6 +87,20 @@ describe("boilingdata with promise method", () => {
   });
 });
 
+describe("splits", () => {
+  let bdInstance: BoilingData = new BoilingData({ username, password, globalCallbacks, logLevel, region: "eu-west-1" });
+
+  beforeAll(async () => await bdInstance.connect());
+  afterAll(async () => await bdInstance.close());
+
+  it("run single query", async () => {
+    const sql = `SELECT * FROM parquet_scan('s3://boilingdata-demo/demo2.parquet') LIMIT 200;`;
+    const rows = await bdInstance.execQueryPromise({ sql });
+    expect(rows.length).toEqual(200);
+    expect(rows.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))).toMatchSnapshot();
+  });
+});
+
 describe("boilingdata with Glue Tables", () => {
   let bdInstance: BoilingData = new BoilingData({ username, password, globalCallbacks, logLevel, region: "eu-west-1" });
 
