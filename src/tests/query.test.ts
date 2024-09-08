@@ -137,7 +137,7 @@ describe("boilingdata with Glue Tables", () => {
       sql: `SELECT COUNT(*) AS count FROM glue('default.flights_parquet') WHERE year=2009 AND month=8;`,
     });
     console.log(JSON.parse(JSON.stringify(rows)));
-    expect(rows[0]?.count).toEqual(568301);
+    expect(rows.reduce((prev, curr) => parseInt(prev?.count ?? "0") + parseInt(curr.count))).toEqual(568301);
   });
   it("can do partition filter push down - range", async () => {
     let rows: any[];
