@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 // BoilingData API documentation
 // https://www.boilingdata.com/apidoc.html
 

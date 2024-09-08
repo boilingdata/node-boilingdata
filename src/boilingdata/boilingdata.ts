@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { BDCredentials, getBoilingDataCredentials, getIdToken } from "../common/identity";
 import { EEngineTypes, EEvent, EMessageTypes, IBDDataQuery, IBDDataResponse } from "./boilingdata.api";
 import { v4 as uuidv4 } from "uuid";
