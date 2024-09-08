@@ -24,8 +24,16 @@ globalCallbacks.onSocketClose = () => logger.info("connection closed.");
 describe("boilingdata with DuckDB", () => {
   let bdInstance: BoilingData = new BoilingData({ username, password, globalCallbacks, logLevel, region: "eu-west-1" });
 
-  beforeAll(async () => await bdInstance.connect());
-  afterAll(async () => await bdInstance.close());
+  beforeAll(async () => {
+    bdInstance = new BoilingData({ username, password, globalCallbacks, logLevel });
+    await bdInstance.connect();
+    logger.info("connected.");
+  });
+
+  afterAll(async () => {
+    await bdInstance.close();
+    logger.info("connection closed.");
+  });
 
   it("run single query", async () => {
     const sql = `SELECT * FROM parquet_scan('s3://boilingdata-demo/demo2.parquet') ORDER BY VendorID, DOLocationID, PULocationID, RatecodeID, tip_amount, total_amount, trip_distance, tpep_dropoff_datetime LIMIT 2;`;
@@ -96,7 +104,7 @@ describe("splits", () => {
   it("run single query", async () => {
     const sql = `SELECT * FROM parquet_scan('s3://boilingdata-demo/demo2.parquet') LIMIT 200;`;
     const rows = await bdInstance.execQueryPromise({ sql });
-    expect(rows.length).toEqual(200);
+    expect(rows.length).toEqual(800); // 4 workers, cloud side does not "collect"
     expect(rows.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))).toMatchSnapshot();
   });
 });
@@ -104,8 +112,16 @@ describe("splits", () => {
 describe("boilingdata with Glue Tables", () => {
   let bdInstance: BoilingData = new BoilingData({ username, password, globalCallbacks, logLevel, region: "eu-west-1" });
 
-  beforeAll(async () => await bdInstance.connect());
-  afterAll(async () => await bdInstance.close());
+  beforeAll(async () => {
+    bdInstance = new BoilingData({ username, password, globalCallbacks, logLevel });
+    await bdInstance.connect();
+    logger.info("connected.");
+  });
+
+  afterAll(async () => {
+    await bdInstance.close();
+    logger.info("connection closed.");
+  });
 
   it("can do partition filter push down - year", async () => {
     let rows: any[];
@@ -160,7 +176,13 @@ describe("BoilingData with S3 folders", () => {
     expect(rows).toMatchInlineSnapshot(`
       Array [
         Object {
-          "count": 29166808,
+          "count_star()": 9851960,
+        },
+        Object {
+          "count_star()": 9487710,
+        },
+        Object {
+          "count_star()": 9827138,
         },
       ]
     `);
@@ -199,7 +221,13 @@ describe("BoilingData with S3 folders", () => {
     expect(rows.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))).toMatchInlineSnapshot(`
       Array [
         Object {
-          "count": 58333616,
+          "count_star()": 18975420,
+        },
+        Object {
+          "count_star()": 19654276,
+        },
+        Object {
+          "count_star()": 19703920,
         },
       ]
     `);
@@ -212,7 +240,13 @@ describe("BoilingData with S3 folders", () => {
     expect(rows.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))).toMatchInlineSnapshot(`
       Array [
         Object {
-          "count": 29166808,
+          "count_star()": 9487710,
+        },
+        Object {
+          "count_star()": 9827138,
+        },
+        Object {
+          "count_star()": 9851960,
         },
       ]
     `);
