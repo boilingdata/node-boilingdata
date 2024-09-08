@@ -20,7 +20,7 @@ jobs:
           BD_USERNAME: ${{ secrets.BD_USERNAME }}
           BD_PASSWORD: ${{ secrets.BD_PASSWORD }}
         run: |
-          yarn install
+          yarn install --frozen-lockfile
           yarn build
           yarn lint
           yarn test
