@@ -21,6 +21,45 @@ const globalCallbacks = globalCallbacksList
 globalCallbacks.onSocketOpen = () => logger.info("connected.");
 globalCallbacks.onSocketClose = () => logger.info("connection closed.");
 
+describe.only("error handling", () => {
+  let bdInstance: BoilingData = new BoilingData({ username, password, globalCallbacks, logLevel, region: "eu-west-1" });
+
+  beforeAll(async () => {
+    bdInstance = new BoilingData({ username, password, globalCallbacks, logLevel });
+    await bdInstance.connect();
+    logger.info("connected.");
+  });
+
+  afterAll(async () => {
+    await bdInstance.close();
+    logger.info("connection closed.");
+  });
+
+  it("missing catalog", async () => {
+    const sql = "SELECT * FROM taxi_locations_limited;";
+    try {
+      const rows = await bdInstance.execQueryPromise({ sql });
+      console.log({ rows });
+    } catch (err) {
+      // console.error(err);
+      // console.log(err.logMessage);
+      expect(err.logMessage).toContain("Catalog Error: Table with name taxi_locations_limited does not exist");
+    }
+  });
+
+  it("random test queries", async () => {
+    try {
+      const sql = "DESCRIBE taxi_locations; -- Database: boiling.sharedtome";
+      const rows = await bdInstance.execQueryPromise({ sql });
+      console.log({ rows });
+    } catch (err) {
+      //console.error(err);
+      //console.log(err.logMessage);
+      expect(err.logMessage).toContain('Error: syntax error at or near "taxi_locations"');
+    }
+  });
+});
+
 describe("boilingdata with DuckDB", () => {
   let bdInstance: BoilingData = new BoilingData({ username, password, globalCallbacks, logLevel, region: "eu-west-1" });
 

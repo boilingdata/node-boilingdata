@@ -101,6 +101,9 @@ export async function getBoilingDataCredentials(
     } else if (authContext && authContext.idToken?.jwtToken) {
       logger?.debug("Using existing ID token");
       idToken = new CognitoIdToken({ IdToken: authContext.idToken?.jwtToken });
+    } else if (username && password) {
+      logger?.debug("Fetching ID token with username and pw (no jwtToken in authContext)");
+      idToken = await getIdToken(username, password, mfa, logger);
     } else {
       throw new Error("No credentials for creating signed WS URL");
     }
