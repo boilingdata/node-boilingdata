@@ -277,7 +277,6 @@ export class BoilingData {
     });
   }
 
-  // FIXME: the ordering of e.g. subBatches is not guaranteed
   public execQueryPromise(params: IBDQuery): Promise<any[]> {
     this.logger.info("execQueryPromise:", params);
     const r: any[] = [];

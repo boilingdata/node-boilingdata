@@ -21,7 +21,7 @@ const globalCallbacks = globalCallbacksList
 globalCallbacks.onSocketOpen = () => logger.info("connected.");
 globalCallbacks.onSocketClose = () => logger.info("connection closed.");
 
-describe.only("error handling", () => {
+describe("error handling", () => {
   let bdInstance: BoilingData = new BoilingData({ username, password, globalCallbacks, logLevel, region: "eu-west-1" });
 
   beforeAll(async () => {
@@ -134,6 +134,22 @@ describe("boilingdata with promise method", () => {
   });
 });
 
+describe("boilingdata with subBatches ordering", () => {
+  let bdInstance: BoilingData = new BoilingData({ username, password, globalCallbacks, logLevel, region: "eu-west-1" });
+
+  beforeAll(async () => await bdInstance.connect());
+  afterAll(async () => await bdInstance.close());
+
+  it("can order sub batches", async () => {
+    const sql = `SELECT passenger_count, vendorid, COUNT(*) AS total_trips, MIN(fare_amount), MAX(trip_distance) FROM parquet_scan('s3://boilingdata-demo/demo.parquet') GROUP BY passenger_count, vendorid ORDER BY total_trips DESC, passenger_count DESC, vendorid DESC;`;
+    const rows = await bdInstance.execQueryPromise({ sql });
+    expect(rows.map(r => r.total_trips)).toEqual([
+      11815973, 7790025, 2745186, 1520307, 1174025, 834914, 699251, 516910, 370343, 359760, 199327, 116169, 7294, 4458,
+      2779, 1882, 692, 388, 123, 83, 80, 13, 9, 5, 4,
+    ]);
+  });
+});
+
 describe("splits", () => {
   let bdInstance: BoilingData = new BoilingData({ username, password, globalCallbacks, logLevel, region: "eu-west-1" });
 
@@ -144,7 +160,10 @@ describe("splits", () => {
     const sql = `SELECT * FROM parquet_scan('s3://boilingdata-demo/demo2.parquet') LIMIT 200;`;
     const rows = await bdInstance.execQueryPromise({ sql });
     expect(rows.length).toEqual(800); // 4 workers, cloud side does not "collect"
-    expect(rows.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))).toMatchSnapshot();
+    // - the snapshot is random ordered, becuase the 4 workers are racing..
+    // - DuckDB also returns random 200 rows as it does not need to order them..
+    // ==> hard to do results verification testing
+    //expect(rows.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))).toMatchSnapshot();
   });
 });
 
@@ -176,7 +195,7 @@ describe("boilingdata with Glue Tables", () => {
       sql: `SELECT COUNT(*) AS count FROM glue('default.flights_parquet') WHERE year=2009 AND month=8;`,
     });
     console.log(JSON.parse(JSON.stringify(rows)));
-    expect(rows.reduce((prev, curr) => parseInt(prev?.count ?? "0") + parseInt(curr.count))).toEqual(568301);
+    expect(rows).toEqual([{ count: 568301 }]);
   });
   it("can do partition filter push down - range", async () => {
     let rows: any[];
@@ -215,13 +234,7 @@ describe("BoilingData with S3 folders", () => {
     expect(rows).toMatchInlineSnapshot(`
       Array [
         Object {
-          "count_star()": 9851960,
-        },
-        Object {
-          "count_star()": 9487710,
-        },
-        Object {
-          "count_star()": 9827138,
+          "count": 29166808,
         },
       ]
     `);
@@ -260,13 +273,7 @@ describe("BoilingData with S3 folders", () => {
     expect(rows.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))).toMatchInlineSnapshot(`
       Array [
         Object {
-          "count_star()": 18975420,
-        },
-        Object {
-          "count_star()": 19654276,
-        },
-        Object {
-          "count_star()": 19703920,
+          "count": 58333616,
         },
       ]
     `);
@@ -279,13 +286,7 @@ describe("BoilingData with S3 folders", () => {
     expect(rows.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)))).toMatchInlineSnapshot(`
       Array [
         Object {
-          "count_star()": 9487710,
-        },
-        Object {
-          "count_star()": 9827138,
-        },
-        Object {
-          "count_star()": 9851960,
+          "count": 29166808,
         },
       ]
     `);
